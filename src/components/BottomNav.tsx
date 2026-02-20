@@ -3,8 +3,8 @@ import { LayoutDashboard, Droplets, Bell, User } from "lucide-react";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: Droplets, label: "Tanks", path: "/dashboard" },
-  { icon: Bell, label: "Alerts", path: "/dashboard" },
+  { icon: Droplets, label: "Tanks", path: "/tanks" },
+  { icon: Bell, label: "Alerts", path: "/alerts" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
 
