@@ -1,0 +1,9 @@
+{
+  "appId": "app.lovable.70b2e872e5194eb3bfaff7691fb35ade",
+  "appName": "CUVOTO",
+  "webDir": "dist",
+  "server": {
+    "url": "https://70b2e872-e519-4eb3-bfaf-f7691fb35ade.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}
