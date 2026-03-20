@@ -120,9 +120,9 @@ const DashboardPage = () => {
               <Wifi className="w-5 h-5 text-cuvoto-orange" />
             </div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Temperature</span>
-            <span className="text-xl font-bold text-foreground mt-1">
-              22.5<span className="text-xs font-normal text-muted-foreground">°C</span>
-            </span>
+             <span className="text-xl font-bold text-foreground mt-1">
+               {sensorData.temperature}<span className="text-xs font-normal text-muted-foreground">°C</span>
+             </span>
           </motion.div>
         </div>
 
