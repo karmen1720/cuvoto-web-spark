@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Droplets, Settings, Wifi, Power, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Droplets, Settings, Wifi, WifiOff, Power, CheckCircle2, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
+import { useMQTT } from "@/hooks/useMQTT";
 
 const DashboardPage = () => {
   const [motorMode, setMotorMode] = useState<"auto" | "manual">("auto");
-  const [motorRunning, setMotorRunning] = useState(false);
+  const { sensorData, connected, publishMotorCommand } = useMQTT();
 
-  const waterLevel = 75;
+  const waterLevel = sensorData.waterLevel;
 
   const logs = [
     { icon: <CheckCircle2 className="w-4 h-4" />, title: "Level Restored", desc: "Automatic stop at 95%", time: "10:45 AM", color: "bg-cuvoto-green/15 text-cuvoto-green" },
