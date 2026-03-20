@@ -38,9 +38,9 @@ export function useMQTT() {
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<MqttClient | null>(null);
 
-  const parseMessage = useCallback((topic: string, message: Buffer) => {
+  const parseMessage = useCallback((topic: string, message: any) => {
     try {
-      const raw = message.toString().trim();
+      const raw = typeof message === 'string' ? message.trim() : new TextDecoder().decode(message).trim();
       const num = parseFloat(raw);
       console.log(`[MQTT] ${topic}:`, raw);
 
