@@ -157,9 +157,9 @@ const DashboardPage = () => {
           <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 flex items-center justify-between">
             <div>
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Motor Status</span>
-              <p className="text-xl font-bold text-primary mt-0.5">
-                {motorRunning ? "Running" : "Standby"}
-              </p>
+               <p className="text-xl font-bold text-primary mt-0.5">
+                 {sensorData.motorRunning ? "Running" : "Standby"}
+               </p>
             </div>
              <button
                onClick={() => {
