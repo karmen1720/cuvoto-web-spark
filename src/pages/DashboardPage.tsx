@@ -161,9 +161,12 @@ const DashboardPage = () => {
                 {motorRunning ? "Running" : "Standby"}
               </p>
             </div>
-            <button
-              onClick={() => setMotorRunning(!motorRunning)}
-              disabled={motorMode === "auto"}
+             <button
+               onClick={() => {
+                 const cmd = sensorData.motorRunning ? "stop" : "start";
+                 publishMotorCommand(cmd);
+               }}
+               disabled={motorMode === "auto"}
               className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${
                 motorMode === "auto"
                   ? "bg-cuvoto-dark-card text-muted-foreground border border-cuvoto-border-dark cursor-not-allowed opacity-50"
