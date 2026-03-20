@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Droplets, Settings, Wifi, Power, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Droplets, Settings, Wifi, WifiOff, Power, CheckCircle2, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
+import { useMQTT } from "@/hooks/useMQTT";
 
 const DashboardPage = () => {
   const [motorMode, setMotorMode] = useState<"auto" | "manual">("auto");
-  const [motorRunning, setMotorRunning] = useState(false);
+  const { sensorData, connected, publishMotorCommand } = useMQTT();
 
-  const waterLevel = 75;
+  const waterLevel = sensorData.waterLevel;
 
   const logs = [
     { icon: <CheckCircle2 className="w-4 h-4" />, title: "Level Restored", desc: "Automatic stop at 95%", time: "10:45 AM", color: "bg-cuvoto-green/15 text-cuvoto-green" },
@@ -26,9 +27,18 @@ const DashboardPage = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-cuvoto-green text-xs font-semibold">
-            <div className="w-2 h-2 rounded-full bg-cuvoto-green animate-pulse-live" />
-            LIVE
+          <div className={`flex items-center gap-1.5 text-xs font-semibold ${connected ? "text-cuvoto-green" : "text-destructive"}`}>
+            {connected ? (
+              <>
+                <div className="w-2 h-2 rounded-full bg-cuvoto-green animate-pulse-live" />
+                LIVE
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-3 h-3" />
+                OFFLINE
+              </>
+            )}
           </div>
           <button className="w-9 h-9 rounded-full bg-cuvoto-dark-card border border-cuvoto-border-dark flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
             <Settings className="w-5 h-5" />
@@ -95,9 +105,9 @@ const DashboardPage = () => {
               <Droplets className="w-5 h-5 text-primary" />
             </div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Salinity</span>
-            <span className="text-xl font-bold text-foreground mt-1">
-              450 <span className="text-xs font-normal text-muted-foreground">ppm</span>
-            </span>
+             <span className="text-xl font-bold text-foreground mt-1">
+               {sensorData.salinity} <span className="text-xs font-normal text-muted-foreground">ppm</span>
+             </span>
           </motion.div>
 
           <motion.div
@@ -110,9 +120,9 @@ const DashboardPage = () => {
               <Wifi className="w-5 h-5 text-cuvoto-orange" />
             </div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Temperature</span>
-            <span className="text-xl font-bold text-foreground mt-1">
-              22.5<span className="text-xs font-normal text-muted-foreground">°C</span>
-            </span>
+             <span className="text-xl font-bold text-foreground mt-1">
+               {sensorData.temperature}<span className="text-xs font-normal text-muted-foreground">°C</span>
+             </span>
           </motion.div>
         </div>
 
@@ -147,23 +157,26 @@ const DashboardPage = () => {
           <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 flex items-center justify-between">
             <div>
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Motor Status</span>
-              <p className="text-xl font-bold text-primary mt-0.5">
-                {motorRunning ? "Running" : "Standby"}
-              </p>
+               <p className="text-xl font-bold text-primary mt-0.5">
+                 {sensorData.motorRunning ? "Running" : "Standby"}
+               </p>
             </div>
-            <button
-              onClick={() => setMotorRunning(!motorRunning)}
-              disabled={motorMode === "auto"}
+             <button
+               onClick={() => {
+                 const cmd = sensorData.motorRunning ? "stop" : "start";
+                 publishMotorCommand(cmd);
+               }}
+               disabled={motorMode === "auto"}
               className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${
-                motorMode === "auto"
-                  ? "bg-cuvoto-dark-card text-muted-foreground border border-cuvoto-border-dark cursor-not-allowed opacity-50"
-                  : motorRunning
-                  ? "bg-destructive text-destructive-foreground shadow-lg"
-                  : "bg-cuvoto-green text-accent-foreground shadow-lg shadow-cuvoto-green/30"
-              }`}
-            >
-              <Power className="w-4 h-4" />
-              {motorRunning ? "Stop" : "Start"} Motor
+                 motorMode === "auto"
+                   ? "bg-cuvoto-dark-card text-muted-foreground border border-cuvoto-border-dark cursor-not-allowed opacity-50"
+                   : sensorData.motorRunning
+                   ? "bg-destructive text-destructive-foreground shadow-lg"
+                   : "bg-cuvoto-green text-accent-foreground shadow-lg shadow-cuvoto-green/30"
+               }`}
+             >
+               <Power className="w-4 h-4" />
+               {sensorData.motorRunning ? "Stop" : "Start"} Motor
             </button>
           </div>
         </section>
