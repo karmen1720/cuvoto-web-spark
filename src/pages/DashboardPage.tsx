@@ -168,15 +168,15 @@ const DashboardPage = () => {
                }}
                disabled={motorMode === "auto"}
               className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${
-                motorMode === "auto"
-                  ? "bg-cuvoto-dark-card text-muted-foreground border border-cuvoto-border-dark cursor-not-allowed opacity-50"
-                  : motorRunning
-                  ? "bg-destructive text-destructive-foreground shadow-lg"
-                  : "bg-cuvoto-green text-accent-foreground shadow-lg shadow-cuvoto-green/30"
-              }`}
-            >
-              <Power className="w-4 h-4" />
-              {motorRunning ? "Stop" : "Start"} Motor
+                 motorMode === "auto"
+                   ? "bg-cuvoto-dark-card text-muted-foreground border border-cuvoto-border-dark cursor-not-allowed opacity-50"
+                   : sensorData.motorRunning
+                   ? "bg-destructive text-destructive-foreground shadow-lg"
+                   : "bg-cuvoto-green text-accent-foreground shadow-lg shadow-cuvoto-green/30"
+               }`}
+             >
+               <Power className="w-4 h-4" />
+               {sensorData.motorRunning ? "Stop" : "Start"} Motor
             </button>
           </div>
         </section>
