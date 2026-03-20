@@ -27,9 +27,18 @@ const DashboardPage = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-cuvoto-green text-xs font-semibold">
-            <div className="w-2 h-2 rounded-full bg-cuvoto-green animate-pulse-live" />
-            LIVE
+          <div className={`flex items-center gap-1.5 text-xs font-semibold ${connected ? "text-cuvoto-green" : "text-destructive"}`}>
+            {connected ? (
+              <>
+                <div className="w-2 h-2 rounded-full bg-cuvoto-green animate-pulse-live" />
+                LIVE
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-3 h-3" />
+                OFFLINE
+              </>
+            )}
           </div>
           <button className="w-9 h-9 rounded-full bg-cuvoto-dark-card border border-cuvoto-border-dark flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
             <Settings className="w-5 h-5" />
