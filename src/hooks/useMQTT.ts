@@ -11,7 +11,7 @@ export interface SensorData {
 
 const MQTT_URL = "wss://c54cee0865234335a45b7af73963eef8.s1.eu.hivemq.cloud:8884/mqtt";
 const MQTT_OPTIONS = {
-  clientId: "clientId-L71tyhChIS",
+  clientId: `cuvoto-web-${Math.random().toString(16).slice(2, 10)}`,
   username: "cuvototeam",
   password: "Cuvoto@2025",
   clean: true,
@@ -38,9 +38,9 @@ export function useMQTT() {
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<MqttClient | null>(null);
 
-  const parseMessage = useCallback((topic: string, message: Buffer) => {
+  const parseMessage = useCallback((topic: string, message: any) => {
     try {
-      const raw = message.toString().trim();
+      const raw = typeof message === 'string' ? message.trim() : new TextDecoder().decode(message).trim();
       const num = parseFloat(raw);
       console.log(`[MQTT] ${topic}:`, raw);
 
