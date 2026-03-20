@@ -105,9 +105,9 @@ const DashboardPage = () => {
               <Droplets className="w-5 h-5 text-primary" />
             </div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Salinity</span>
-            <span className="text-xl font-bold text-foreground mt-1">
-              450 <span className="text-xs font-normal text-muted-foreground">ppm</span>
-            </span>
+             <span className="text-xl font-bold text-foreground mt-1">
+               {sensorData.salinity} <span className="text-xs font-normal text-muted-foreground">ppm</span>
+             </span>
           </motion.div>
 
           <motion.div
