@@ -18,7 +18,11 @@ const MQTT_OPTIONS = {
   reconnectPeriod: 5000,
 };
 
-const TOPIC = "water/tank/level";
+const TOPICS = [
+  "water/tank/level",
+  "water/tank/temperature",
+  "water/tank/tds",
+];
 
 const defaultData: SensorData = {
   waterLevel: 0,
@@ -36,30 +40,29 @@ export function useMQTT() {
 
   const parseMessage = useCallback((topic: string, message: Buffer) => {
     try {
-      const raw = message.toString();
+      const raw = message.toString().trim();
+      const num = parseFloat(raw);
       console.log(`[MQTT] ${topic}:`, raw);
 
-      // Try JSON parse first
-      try {
-        const json = JSON.parse(raw);
-        setSensorData((prev) => ({
-          waterLevel: json.waterLevel ?? json.water_level ?? json.level ?? prev.waterLevel,
-          salinity: json.salinity ?? json.tds ?? prev.salinity,
-          temperature: json.temperature ?? json.temp ?? prev.temperature,
-          motorRunning: json.motorRunning ?? json.motor ?? prev.motorRunning,
-          timestamp: new Date(),
-        }));
-      } catch {
-        // Plain number = water level
-        const num = parseFloat(raw);
-        if (!isNaN(num)) {
-          setSensorData((prev) => ({
-            ...prev,
-            waterLevel: Math.min(100, Math.max(0, num)),
-            timestamp: new Date(),
-          }));
+      setSensorData((prev) => {
+        const updated = { ...prev, timestamp: new Date() };
+
+        switch (topic) {
+          case "water/tank/level":
+            updated.waterLevel = !isNaN(num) ? Math.min(100, Math.max(0, num)) : prev.waterLevel;
+            break;
+          case "water/tank/temperature":
+            updated.temperature = !isNaN(num) ? num : prev.temperature;
+            break;
+          case "water/tank/tds":
+            updated.salinity = !isNaN(num) ? num : prev.salinity;
+            break;
+          default:
+            break;
         }
-      }
+
+        return updated;
+      });
     } catch (e) {
       console.error("[MQTT] Parse error:", e);
     }
@@ -73,19 +76,19 @@ export function useMQTT() {
       console.log("[MQTT] Connected to HiveMQ");
       setConnected(true);
       setError(null);
-      client.subscribe(TOPIC, (err) => {
-        if (err) console.error("[MQTT] Subscribe error:", err);
-        else console.log("[MQTT] Subscribed to", TOPIC);
-      });
+      TOPICS.forEach((t) =>
+        client.subscribe(t, (err) => {
+          if (err) console.error("[MQTT] Subscribe error:", t, err);
+          else console.log("[MQTT] Subscribed to", t);
+        })
+      );
     });
 
     client.on("message", parseMessage);
-
     client.on("error", (err) => {
       console.error("[MQTT] Error:", err);
       setError(err.message);
     });
-
     client.on("offline", () => setConnected(false));
     client.on("reconnect", () => console.log("[MQTT] Reconnecting..."));
 
