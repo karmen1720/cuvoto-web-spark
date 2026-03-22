@@ -1,12 +1,11 @@
-import { useState } from "react";
-import { Droplets, Settings, Wifi, WifiOff, Power, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Droplets, Settings, WifiOff, CheckCircle2, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
+import MotorControl from "@/components/dashboard/MotorControl";
 import { useMQTT } from "@/hooks/useMQTT";
 
 const DashboardPage = () => {
-  const [motorMode, setMotorMode] = useState<"auto" | "manual">("auto");
-  const { sensorData, connected, publishMotorCommand } = useMQTT();
+  const { sensorData, connected, motorCommandStatus, publishMotorCommand, publishMotorMode } = useMQTT();
 
   const waterLevel = sensorData.waterLevel;
 
