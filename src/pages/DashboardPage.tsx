@@ -116,7 +116,7 @@ const DashboardPage = () => {
             className="flex-1 flex flex-col items-center bg-cuvoto-dark-card border border-cuvoto-border-dark p-4 rounded-2xl"
           >
             <div className="w-10 h-10 rounded-lg bg-cuvoto-orange/10 flex items-center justify-center mb-2">
-              <Wifi className="w-5 h-5 text-cuvoto-orange" />
+              <Droplets className="w-5 h-5 text-cuvoto-orange" />
             </div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Temperature</span>
              <span className="text-xl font-bold text-foreground mt-1">
