@@ -1,12 +1,11 @@
-import { useState } from "react";
-import { Droplets, Settings, Wifi, WifiOff, Power, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Droplets, Settings, WifiOff, CheckCircle2, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
+import MotorControl from "@/components/dashboard/MotorControl";
 import { useMQTT } from "@/hooks/useMQTT";
 
 const DashboardPage = () => {
-  const [motorMode, setMotorMode] = useState<"auto" | "manual">("auto");
-  const { sensorData, connected, publishMotorCommand } = useMQTT();
+  const { sensorData, connected, motorCommandStatus, publishMotorCommand, publishMotorMode } = useMQTT();
 
   const waterLevel = sensorData.waterLevel;
 
@@ -117,7 +116,7 @@ const DashboardPage = () => {
             className="flex-1 flex flex-col items-center bg-cuvoto-dark-card border border-cuvoto-border-dark p-4 rounded-2xl"
           >
             <div className="w-10 h-10 rounded-lg bg-cuvoto-orange/10 flex items-center justify-center mb-2">
-              <Wifi className="w-5 h-5 text-cuvoto-orange" />
+              <Droplets className="w-5 h-5 text-cuvoto-orange" />
             </div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Temperature</span>
              <span className="text-xl font-bold text-foreground mt-1">
@@ -127,59 +126,12 @@ const DashboardPage = () => {
         </div>
 
         {/* Motor Controls */}
-        <section className="mt-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold">Motor Controls</h3>
-            <div className="flex bg-cuvoto-dark-card rounded-xl p-1 w-28">
-              <button
-                onClick={() => setMotorMode("auto")}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  motorMode === "auto"
-                    ? "bg-card text-primary shadow-sm"
-                    : "text-muted-foreground"
-                }`}
-              >
-                AUTO
-              </button>
-              <button
-                onClick={() => setMotorMode("manual")}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  motorMode === "manual"
-                    ? "bg-card text-primary shadow-sm"
-                    : "text-muted-foreground"
-                }`}
-              >
-                MANUAL
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 flex items-center justify-between">
-            <div>
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Motor Status</span>
-               <p className="text-xl font-bold text-primary mt-0.5">
-                 {sensorData.motorRunning ? "Running" : "Standby"}
-               </p>
-            </div>
-             <button
-               onClick={() => {
-                 const cmd = sensorData.motorRunning ? "stop" : "start";
-                 publishMotorCommand(cmd);
-               }}
-               disabled={motorMode === "auto"}
-              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${
-                 motorMode === "auto"
-                   ? "bg-cuvoto-dark-card text-muted-foreground border border-cuvoto-border-dark cursor-not-allowed opacity-50"
-                   : sensorData.motorRunning
-                   ? "bg-destructive text-destructive-foreground shadow-lg"
-                   : "bg-cuvoto-green text-accent-foreground shadow-lg shadow-cuvoto-green/30"
-               }`}
-             >
-               <Power className="w-4 h-4" />
-               {sensorData.motorRunning ? "Stop" : "Start"} Motor
-            </button>
-          </div>
-        </section>
+        <MotorControl
+          sensorData={sensorData}
+          motorCommandStatus={motorCommandStatus}
+          onModeChange={publishMotorMode}
+          onMotorCommand={publishMotorCommand}
+        />
 
         {/* Recent Logs */}
         <section className="mt-6 space-y-3">
