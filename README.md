@@ -1,73 +1,117 @@
-# Welcome to your Lovable project
+# CUVOTO - Smart Water Tank Management System
 
-## Project info
+<p align="center">
+  <strong>Real-time IoT water monitoring and pump automation</strong><br/>
+  <em>by CUVOTO Private Limited, Bangalore, India</em>
+</p>
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+---
 
-## How can I edit this code?
+## Overview
 
-There are several ways of editing your application.
+CUVOTO is a full-stack IoT platform for smart water tank management. It combines ESP32-based sensor hardware with a modern React web application to provide:
 
-**Use Lovable**
+- **Real-time water level monitoring** with animated gauge visualization
+- **Temperature and salinity (TDS) tracking** for water quality
+- **Remote motor/pump control** via MQTT with acknowledgment feedback
+- **Automatic pump control** based on configurable water level thresholds
+- **Multi-tenant organization management** with invite-code-based registration
+- **Cross-platform support** via web browser and native mobile apps (Capacitor)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## System Architecture
 
-Changes made via Lovable will be committed automatically to this repo.
+```
+  Tank Unit (ESP32)          Pump Unit (ESP32)           Cloud              Web/Mobile App
+  +--------------+   ESP-NOW  +--------------+   MQTT    +---------+  WSS   +----------+
+  | Ultrasonic   |----------->| PumpController|<-------->| HiveMQ  |<------>| React    |
+  | Temperature  |            | Relay Control |          | Cloud   |        | Dashboard|
+  | TDS Sensor   |            | WebUI (local) |          +---------+        |          |
+  +--------------+            +--------------+                              | Supabase |
+                                                          +---------+       | Auth     |
+                                                          |Supabase |<----->|          |
+                                                          | (Auth+DB)|      +----------+
+                                                          +---------+
+```
 
-**Use your preferred IDE**
+> For detailed architecture documentation with Mermaid diagrams, see **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Technology Stack
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, Framer Motion |
+| **Real-time** | MQTT (mqtt.js) over WebSocket Secure (WSS) via HiveMQ Cloud |
+| **Backend** | Supabase (PostgreSQL, Auth, Row-Level Security) |
+| **Mobile** | Capacitor (Android & iOS) |
+| **Hardware** | ESP32, PlatformIO, C++ (see [water-system](https://github.com/karmen1720/water-system) repo) |
 
-Follow these steps:
+## Pages
+
+| Page | Route | Description |
+|------|-------|-------------|
+| **Auth** | `/auth` | Login (email/Google), Registration (invite code + OTP), Password recovery |
+| **Dashboard** | `/dashboard` | Water level gauge, salinity & temperature cards, motor controls, logs |
+| **Tanks** | `/tanks` | Overview of all tanks with status, levels, and sensor readings |
+| **Alerts** | `/alerts` | Filterable alert feed (critical, warning, info, resolved) |
+| **Profile** | `/profile` | User profile, company info, account settings |
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ and npm ([install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
+
+### Local Development
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Clone the repository
+git clone https://github.com/karmen1720/cuvoto-web-spark.git
+cd cuvoto-web-spark
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Install dependencies
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Available Scripts
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+| Script | Command | Description |
+|--------|---------|-------------|
+| `dev` | `npm run dev` | Start Vite dev server with HMR |
+| `build` | `npm run build` | Production build |
+| `build:dev` | `npm run build:dev` | Development build |
+| `preview` | `npm run preview` | Preview production build |
+| `lint` | `npm run lint` | Run ESLint |
+| `test` | `npm run test` | Run tests (Vitest) |
+| `test:watch` | `npm run test:watch` | Run tests in watch mode |
 
-**Use GitHub Codespaces**
+### Environment Variables
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+The app requires the following environment variables (configured in `.env`):
 
-## What technologies are used for this project?
+| Variable | Description |
+|----------|-------------|
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase anonymous/public key |
+| `VITE_SUPABASE_PROJECT_ID` | Supabase project ID |
 
-This project is built with:
+## Documentation
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **[Architecture & Diagrams](docs/ARCHITECTURE.md)** - Complete system architecture, data flow diagrams, database schema, state machines, MQTT topic map, and deployment overview
 
-## How can I deploy this project?
+## Related Repositories
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+- **[water-system](https://github.com/karmen1720/water-system)** - ESP32 firmware for Tank Unit (sensors) and Pump Unit (controller)
 
-## Can I connect a custom domain to my Lovable project?
+## Deployment
 
-Yes, you can!
+The web application is deployed via [Lovable](https://lovable.dev). For mobile builds:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- **Android:** Use Capacitor with `npx cap add android && npx cap open android`
+- **iOS:** Use Capacitor with `npx cap add ios && npx cap open ios`
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## License
+
+Proprietary - CUVOTO Private Limited
