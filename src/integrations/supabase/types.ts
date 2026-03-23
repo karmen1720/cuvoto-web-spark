@@ -105,6 +105,107 @@ export type Database = {
           },
         ]
       }
+      tank_logs: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          organization_id: string
+          severity: string | null
+          tank_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          organization_id: string
+          severity?: string | null
+          tank_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          organization_id?: string
+          severity?: string | null
+          tank_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tank_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tank_logs_tank_id_fkey"
+            columns: ["tank_id"]
+            isOneToOne: false
+            referencedRelation: "tanks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tanks: {
+        Row: {
+          auto_max_level: number | null
+          auto_min_level: number | null
+          capacity_liters: number | null
+          created_at: string
+          created_by: string | null
+          device_id: string | null
+          id: string
+          location: string | null
+          mqtt_topic_prefix: string | null
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          auto_max_level?: number | null
+          auto_min_level?: number | null
+          capacity_liters?: number | null
+          created_at?: string
+          created_by?: string | null
+          device_id?: string | null
+          id?: string
+          location?: string | null
+          mqtt_topic_prefix?: string | null
+          name: string
+          organization_id: string
+        }
+        Update: {
+          auto_max_level?: number | null
+          auto_min_level?: number | null
+          capacity_liters?: number | null
+          created_at?: string
+          created_by?: string | null
+          device_id?: string | null
+          id?: string
+          location?: string | null
+          mqtt_topic_prefix?: string | null
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tanks_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
