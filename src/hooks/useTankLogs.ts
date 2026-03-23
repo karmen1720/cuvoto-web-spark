@@ -71,9 +71,12 @@ export function useTankLogs(tankId?: string) {
     title: string;
     description?: string;
     severity?: string;
-    metadata?: Record<string, unknown>;
+    metadata?: Record<string, string | number | boolean>;
   }) => {
-    const { error } = await supabase.from("tank_logs").insert([log]);
+    const { error } = await supabase.from("tank_logs").insert([{
+      ...log,
+      metadata: log.metadata as any,
+    }]);
     if (error) console.error("Failed to log event:", error);
   };
 
