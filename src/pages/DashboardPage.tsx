@@ -1,18 +1,59 @@
-import { Droplets, Settings, WifiOff, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Droplets, Settings, WifiOff, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import MotorControl from "@/components/dashboard/MotorControl";
+import AutoModeSettings from "@/components/dashboard/AutoModeSettings";
 import { useMQTT } from "@/hooks/useMQTT";
+import { useTanks } from "@/hooks/useTanks";
+import { useTankLogs } from "@/hooks/useTankLogs";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useRef } from "react";
+import { format } from "date-fns";
 
 const DashboardPage = () => {
   const { sensorData, connected, motorCommandStatus, publishMotorCommand, publishMotorMode } = useMQTT();
+  const { tanks, loading: tanksLoading, updateTank } = useTanks();
+  const { logs, loading: logsLoading, addLog } = useTankLogs();
+  const { user } = useAuth();
 
+  const activeTank = tanks[0]; // Primary tank
   const waterLevel = sensorData.waterLevel;
+  const prevMotorRef = useRef(sensorData.motorRunning);
 
-  const logs = [
-    { icon: <CheckCircle2 className="w-4 h-4" />, title: "Level Restored", desc: "Automatic stop at 95%", time: "10:45 AM", color: "bg-cuvoto-green/15 text-cuvoto-green" },
-    { icon: <AlertTriangle className="w-4 h-4" />, title: "Motor Triggered", desc: "Water level dropped below 20%", time: "10:12 AM", color: "bg-cuvoto-orange/15 text-cuvoto-orange" },
-  ];
+  // Log motor state changes
+  useEffect(() => {
+    if (!activeTank || !user) return;
+    if (prevMotorRef.current !== sensorData.motorRunning) {
+      prevMotorRef.current = sensorData.motorRunning;
+      addLog({
+        tank_id: activeTank.id,
+        organization_id: activeTank.organization_id,
+        event_type: sensorData.motorRunning ? "motor_on" : "motor_off",
+        title: sensorData.motorRunning ? "Motor Started" : "Motor Stopped",
+        description: `Motor ${sensorData.motorRunning ? "started" : "stopped"} in ${sensorData.motorMode} mode at ${waterLevel}% level`,
+        severity: "info",
+        metadata: { water_level: waterLevel, mode: sensorData.motorMode },
+      });
+    }
+  }, [sensorData.motorRunning]);
+
+  const handleSaveThresholds = async (min: number, max: number) => {
+    if (!activeTank) return false;
+    return updateTank(activeTank.id, { auto_min_level: min, auto_max_level: max });
+  };
+
+  const recentLogs = logs.slice(0, 5);
+
+  const getLogIcon = (eventType: string) => {
+    if (eventType.includes("motor_on") || eventType.includes("alert")) return <AlertTriangle className="w-4 h-4" />;
+    return <CheckCircle2 className="w-4 h-4" />;
+  };
+
+  const getLogColor = (severity: string) => {
+    if (severity === "critical") return "bg-destructive/15 text-destructive";
+    if (severity === "warning") return "bg-cuvoto-orange/15 text-cuvoto-orange";
+    return "bg-cuvoto-green/15 text-cuvoto-green";
+  };
 
   return (
     <div className="min-h-screen bg-cuvoto-gradient text-foreground dark">
@@ -47,8 +88,11 @@ const DashboardPage = () => {
 
       {/* Main Content */}
       <main className="flex-1 px-4 pb-24 overflow-y-auto">
-        <div className="mb-2 mt-4">
-          <h2 className="text-lg font-bold text-foreground">Water Tank Dashboard</h2>
+        <div className="mb-2 mt-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-foreground">
+            {activeTank ? activeTank.name : "Water Tank Dashboard"}
+          </h2>
+          {tanksLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
         </div>
 
         {/* Water Level Gauge */}
@@ -59,10 +103,7 @@ const DashboardPage = () => {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="relative w-56 h-56 rounded-full border-4 border-cuvoto-border-dark flex items-center justify-center"
           >
-            {/* Ring glow */}
             <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
-            
-            {/* Water fill */}
             <div className="relative w-full h-full rounded-full overflow-hidden bg-cuvoto-dark-card flex flex-col justify-end">
               <motion.div
                 initial={{ height: 0 }}
@@ -74,8 +115,6 @@ const DashboardPage = () => {
                 <div className="liquid-wave-2" />
               </motion.div>
             </div>
-
-            {/* Center text */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <motion.span
                 initial={{ opacity: 0 }}
@@ -104,9 +143,9 @@ const DashboardPage = () => {
               <Droplets className="w-5 h-5 text-primary" />
             </div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Salinity</span>
-             <span className="text-xl font-bold text-foreground mt-1">
-               {sensorData.salinity} <span className="text-xs font-normal text-muted-foreground">ppm</span>
-             </span>
+            <span className="text-xl font-bold text-foreground mt-1">
+              {sensorData.salinity} <span className="text-xs font-normal text-muted-foreground">ppm</span>
+            </span>
           </motion.div>
 
           <motion.div
@@ -119,9 +158,9 @@ const DashboardPage = () => {
               <Droplets className="w-5 h-5 text-cuvoto-orange" />
             </div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Temperature</span>
-             <span className="text-xl font-bold text-foreground mt-1">
-               {sensorData.temperature}<span className="text-xs font-normal text-muted-foreground">°C</span>
-             </span>
+            <span className="text-xl font-bold text-foreground mt-1">
+              {sensorData.temperature}<span className="text-xs font-normal text-muted-foreground">°C</span>
+            </span>
           </motion.div>
         </div>
 
@@ -133,35 +172,62 @@ const DashboardPage = () => {
           onMotorCommand={publishMotorCommand}
         />
 
+        {/* Auto Mode Threshold Settings */}
+        <AutoModeSettings
+          currentLevel={waterLevel}
+          minLevel={activeTank?.auto_min_level ?? 20}
+          maxLevel={activeTank?.auto_max_level ?? 90}
+          motorMode={sensorData.motorMode}
+          onSave={handleSaveThresholds}
+        />
+
         {/* Recent Logs */}
         <section className="mt-6 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold">Recent Logs</h3>
-            <button className="text-sm font-bold text-primary">View all</button>
+            <button
+              onClick={() => window.location.href = "/alerts"}
+              className="text-sm font-bold text-primary"
+            >
+              View all
+            </button>
           </div>
 
-          <div className="space-y-3">
-            {logs.map((log, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 + i * 0.1 }}
-                className="flex items-center justify-between p-4 bg-cuvoto-dark-card border border-cuvoto-border-dark rounded-xl"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${log.color}`}>
-                    {log.icon}
+          {logsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : recentLogs.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-sm">No logs yet</p>
+              <p className="text-xs">Events will appear here as they happen</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentLogs.map((log, i) => (
+                <motion.div
+                  key={log.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 + i * 0.05 }}
+                  className="flex items-center justify-between p-4 bg-cuvoto-dark-card border border-cuvoto-border-dark rounded-xl"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getLogColor(log.severity)}`}>
+                      {getLogIcon(log.event_type)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold">{log.title}</p>
+                      <p className="text-xs text-muted-foreground">{log.description}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold">{log.title}</p>
-                    <p className="text-xs text-muted-foreground">{log.desc}</p>
-                  </div>
-                </div>
-                <span className="text-xs font-medium text-muted-foreground">{log.time}</span>
-              </motion.div>
-            ))}
-          </div>
+                  <span className="text-xs font-medium text-muted-foreground whitespace-nowrap ml-2">
+                    {format(new Date(log.created_at), "h:mm a")}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </section>
       </main>
 
