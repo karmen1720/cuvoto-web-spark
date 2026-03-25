@@ -1,10 +1,11 @@
-import { Droplets, ChevronRight, Mail, Lock, Bell, HelpCircle, FileText, LogOut, Camera, Loader2 } from "lucide-react";
+import { Droplets, ChevronRight, Mail, Lock, Bell, HelpCircle, FileText, LogOut, Camera, Loader2, Check, Pencil, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
+import { toast } from "sonner";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -12,6 +13,9 @@ const ProfilePage = () => {
   const [profile, setProfile] = useState<{ display_name: string | null; email: string | null; organization_id: string | null } | null>(null);
   const [orgName, setOrgName] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -19,6 +23,7 @@ const ProfilePage = () => {
       const { data } = await supabase.from("profiles").select("display_name, email, organization_id").eq("id", user.id).single();
       if (data) {
         setProfile(data);
+        setEditName(data.display_name || "");
         if (data.organization_id) {
           const { data: org } = await supabase.from("organizations").select("name").eq("id", data.organization_id).single();
           if (org) setOrgName(org.name);
@@ -33,20 +38,40 @@ const ProfilePage = () => {
     navigate("/auth", { replace: true });
   };
 
+  const handleSaveName = async () => {
+    if (!user || !editName.trim()) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ display_name: editName.trim() })
+      .eq("id", user.id);
+
+    if (error) {
+      toast.error("Failed to update name");
+    } else {
+      setProfile((prev) => prev ? { ...prev, display_name: editName.trim() } : prev);
+      toast.success("Name updated!");
+      setEditing(false);
+    }
+    setSaving(false);
+  };
+
   const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const email = profile?.email || user?.email || "";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
 
   const settingsItems = [
-    { icon: <Mail className="w-5 h-5" />, label: email },
-    { icon: <Lock className="w-5 h-5" />, label: "Change Password" },
-    { icon: <Bell className="w-5 h-5" />, label: "Notification Preferences" },
+    { icon: <Mail className="w-5 h-5" />, label: email, action: undefined },
+    { icon: <Lock className="w-5 h-5" />, label: "Change Password", action: undefined },
+    { icon: <Bell className="w-5 h-5" />, label: "Notification Preferences", action: undefined },
   ];
 
   const supportItems = [
     { icon: <HelpCircle className="w-5 h-5" />, label: "Help Center" },
     { icon: <FileText className="w-5 h-5" />, label: "Privacy Policy" },
   ];
+
+  const inputClass = "w-full px-3 py-2.5 bg-cuvoto-dark-card border border-cuvoto-border-dark rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30";
 
   return (
     <div className="min-h-screen bg-cuvoto-gradient text-foreground dark">
@@ -73,8 +98,45 @@ const ProfilePage = () => {
               <Camera className="w-4 h-4 text-primary-foreground" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold mt-4">{displayName}</h1>
-          {orgName && <p className="text-muted-foreground text-sm font-medium">{orgName}</p>}
+
+          {/* Editable Name */}
+          {editing ? (
+            <div className="flex items-center gap-2 mt-4 w-full max-w-[250px]">
+              <input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className={inputClass}
+                placeholder="Display Name"
+                autoFocus
+                maxLength={50}
+              />
+              <button
+                onClick={handleSaveName}
+                disabled={saving || !editName.trim()}
+                className="w-9 h-9 shrink-0 rounded-xl bg-cuvoto-green text-accent-foreground flex items-center justify-center disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              </button>
+              <button
+                onClick={() => { setEditing(false); setEditName(profile?.display_name || ""); }}
+                className="w-9 h-9 shrink-0 rounded-xl bg-cuvoto-dark-card border border-cuvoto-border-dark text-muted-foreground flex items-center justify-center"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 mt-4">
+              <h1 className="text-2xl font-bold">{displayName}</h1>
+              <button
+                onClick={() => { setEditing(true); setEditName(profile?.display_name || displayName); }}
+                className="w-7 h-7 rounded-lg bg-cuvoto-dark-card border border-cuvoto-border-dark flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {orgName && <p className="text-muted-foreground text-sm font-medium mt-1">{orgName}</p>}
           <div className="mt-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-cuvoto-green" />
             <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Verified Account</span>

@@ -5,12 +5,13 @@ import { format, isToday, isYesterday } from "date-fns";
 import BottomNav from "@/components/BottomNav";
 import { useTankLogs, type TankLog } from "@/hooks/useTankLogs";
 
-type FilterType = "all" | "motor_on" | "motor_off" | "alert" | "info";
+type FilterType = "all" | "motor_on" | "motor_off" | "mode_change" | "alert" | "info";
 
 const filterOptions: { label: string; value: FilterType }[] = [
   { label: "All", value: "all" },
   { label: "Motor ON", value: "motor_on" },
   { label: "Motor OFF", value: "motor_off" },
+  { label: "Mode", value: "mode_change" },
   { label: "Alerts", value: "alert" },
   { label: "Info", value: "info" },
 ];
