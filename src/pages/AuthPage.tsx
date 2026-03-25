@@ -25,7 +25,7 @@ const AuthPage = () => {
 
   useEffect(() => {
     if (session) {
-      // Check if user has org assigned, if from Google OAuth with pending invite code
+      // ProtectedRoute will handle redirect to register-device or dashboard
       navigate("/dashboard", { replace: true });
     }
   }, [session, navigate]);
