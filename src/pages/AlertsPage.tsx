@@ -11,6 +11,7 @@ const filterOptions: { label: string; value: FilterType }[] = [
   { label: "All", value: "all" },
   { label: "Motor ON", value: "motor_on" },
   { label: "Motor OFF", value: "motor_off" },
+  { label: "Mode", value: "mode_change" },
   { label: "Alerts", value: "alert" },
   { label: "Info", value: "info" },
 ];
