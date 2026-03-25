@@ -198,8 +198,8 @@ const DashboardPage = () => {
         <MotorControl
           sensorData={sensorData}
           motorCommandStatus={motorCommandStatus}
-          onModeChange={publishMotorMode}
-          onMotorCommand={publishMotorCommand}
+          onModeChange={handleModeChange}
+          onMotorCommand={handleMotorCommand}
         />
 
         {/* Auto Mode Threshold Settings */}
