@@ -20,7 +20,7 @@ const DashboardPage = () => {
   const waterLevel = sensorData.waterLevel;
   const prevMotorRef = useRef(sensorData.motorRunning);
 
-  // Log motor state changes
+  // Log motor state changes from device
   useEffect(() => {
     if (!activeTank || !user) return;
     if (prevMotorRef.current !== sensorData.motorRunning) {
@@ -36,6 +36,36 @@ const DashboardPage = () => {
       });
     }
   }, [sensorData.motorRunning]);
+
+  // Log user-initiated motor commands immediately
+  const handleMotorCommand = (cmd: "start" | "stop") => {
+    if (!activeTank || !user) return;
+    addLog({
+      tank_id: activeTank.id,
+      organization_id: activeTank.organization_id,
+      event_type: cmd === "start" ? "motor_on" : "motor_off",
+      title: cmd === "start" ? "Motor Start Command" : "Motor Stop Command",
+      description: `User sent ${cmd} command in ${sensorData.motorMode} mode at ${waterLevel}% level`,
+      severity: "info",
+      metadata: { water_level: waterLevel, mode: sensorData.motorMode, source: "user_action" },
+    });
+    publishMotorCommand(cmd);
+  };
+
+  // Log mode changes
+  const handleModeChange = (mode: "auto" | "manual") => {
+    if (!activeTank || !user) return;
+    addLog({
+      tank_id: activeTank.id,
+      organization_id: activeTank.organization_id,
+      event_type: "mode_change",
+      title: `Switched to ${mode.toUpperCase()} Mode`,
+      description: `User changed motor mode to ${mode} at ${waterLevel}% level`,
+      severity: "info",
+      metadata: { water_level: waterLevel, mode, source: "user_action" },
+    });
+    publishMotorMode(mode);
+  };
 
   const handleSaveThresholds = async (min: number, max: number) => {
     if (!activeTank) return false;
