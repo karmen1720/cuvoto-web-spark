@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      device_codes: {
+        Row: {
+          code: string
+          created_at: string
+          device_id: string
+          device_name: string
+          id: string
+          is_paired: boolean
+          organization_id: string | null
+          paired_at: string | null
+          paired_by: string | null
+          tank_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          device_id: string
+          device_name?: string
+          id?: string
+          is_paired?: boolean
+          organization_id?: string | null
+          paired_at?: string | null
+          paired_by?: string | null
+          tank_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          device_id?: string
+          device_name?: string
+          id?: string
+          is_paired?: boolean
+          organization_id?: string | null
+          paired_at?: string | null
+          paired_by?: string | null
+          tank_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_codes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_codes_tank_id_fkey"
+            columns: ["tank_id"]
+            isOneToOne: false
+            referencedRelation: "tanks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invite_codes: {
         Row: {
           code: string
@@ -211,6 +265,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      pair_device: {
+        Args: {
+          _code: string
+          _location?: string
+          _tank_name?: string
+          _user_id: string
+        }
+        Returns: string
+      }
       use_invite_code: {
         Args: { _code: string; _user_id: string }
         Returns: string
