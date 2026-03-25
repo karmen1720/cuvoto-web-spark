@@ -10,6 +10,7 @@ import DashboardPage from "./pages/DashboardPage";
 import TanksPage from "./pages/TanksPage";
 import AlertsPage from "./pages/AlertsPage";
 import ProfilePage from "./pages/ProfilePage";
+import RegisterDevicePage from "./pages/RegisterDevicePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,9 +25,10 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<AuthPage />} />
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-            <Route path="/tanks" element={<ProtectedRoute><TanksPage /></ProtectedRoute>} />
-            <Route path="/alerts" element={<ProtectedRoute><AlertsPage /></ProtectedRoute>} />
+            <Route path="/register-device" element={<ProtectedRoute><RegisterDevicePage /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute requireDevice><DashboardPage /></ProtectedRoute>} />
+            <Route path="/tanks" element={<ProtectedRoute requireDevice><TanksPage /></ProtectedRoute>} />
+            <Route path="/alerts" element={<ProtectedRoute requireDevice><AlertsPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
