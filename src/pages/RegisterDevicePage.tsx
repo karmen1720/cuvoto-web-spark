@@ -191,24 +191,31 @@ const RegisterDevicePage = () => {
             </motion.form>
           )}
 
-          {/* Info */}
+          {/* Setup Options */}
           {!success && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="mt-8 p-4 bg-cuvoto-dark-card border border-cuvoto-border-dark rounded-xl"
+              className="mt-6 space-y-3"
             >
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-4 h-4 text-cuvoto-orange mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-foreground">How to find your device code?</p>
-                  <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
-                    Each CUVOTO device comes with a unique pairing code printed on the device label. 
-                    Enter the code exactly as shown (e.g. DEV-001-CUVOTO).
-                  </p>
-                </div>
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-cuvoto-border-dark" />
+                <span className="text-xs text-muted-foreground font-semibold">OR</span>
+                <div className="h-px flex-1 bg-cuvoto-border-dark" />
               </div>
+
+              <button
+                onClick={() => navigate("/device-setup")}
+                className="w-full py-3.5 bg-cuvoto-dark-card border border-cuvoto-border-dark text-foreground font-bold text-sm rounded-xl hover:border-primary/40 transition-all flex items-center justify-center gap-2"
+              >
+                <Wifi className="w-4 h-4 text-primary" />
+                Setup via Device Hotspot
+              </button>
+
+              <p className="text-[10px] text-muted-foreground text-center">
+                Connect directly to your device's WiFi hotspot to configure WiFi, MQTT topics, and pair — all automatically.
+              </p>
             </motion.div>
           )}
         </motion.div>
