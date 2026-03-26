@@ -27,6 +27,7 @@ const App = () => (
             <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/register-device" element={<ProtectedRoute><RegisterDevicePage /></ProtectedRoute>} />
+            <Route path="/device-setup" element={<ProtectedRoute><DeviceSetupPage /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute requireDevice><DashboardPage /></ProtectedRoute>} />
             <Route path="/tanks" element={<ProtectedRoute requireDevice><TanksPage /></ProtectedRoute>} />
             <Route path="/alerts" element={<ProtectedRoute requireDevice><AlertsPage /></ProtectedRoute>} />
