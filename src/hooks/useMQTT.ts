@@ -22,20 +22,6 @@ const MQTT_OPTIONS = {
   reconnectPeriod: 5000,
 };
 
-// Subscribe topics
-const TOPICS = [
-  "water/tank/level",
-  "water/tank/temperature",
-  "water/tank/tds",
-  "water/tank/motor/status",    // Device reports motor on/off
-  "water/tank/device/status",   // Device reports online/offline (heartbeat)
-  "water/tank/motor/ack",       // Device acknowledges motor command
-];
-
-// Publish topics
-// "water/tank/motor/command"  → payload: "start" | "stop"
-// "water/tank/motor/mode"     → payload: "auto" | "manual"
-
 const COMMAND_TIMEOUT_MS = 8000;
 
 const defaultData: SensorData = {
@@ -48,7 +34,10 @@ const defaultData: SensorData = {
   timestamp: new Date(),
 };
 
-export function useMQTT() {
+/**
+ * @param topicPrefix - per-tank MQTT topic prefix, e.g. "water/tank" or "water/tank/device-abc"
+ */
+export function useMQTT(topicPrefix: string = "water/tank") {
   const [sensorData, setSensorData] = useState<SensorData>(defaultData);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,14 +52,29 @@ export function useMQTT() {
     }
   }, []);
 
+  // Build topics from prefix
+  const topics = useRef<string[]>([]);
+  const commandTopic = `${topicPrefix}/motor/command`;
+  const modeTopic = `${topicPrefix}/motor/mode`;
+
+  useEffect(() => {
+    topics.current = [
+      `${topicPrefix}/level`,
+      `${topicPrefix}/temperature`,
+      `${topicPrefix}/tds`,
+      `${topicPrefix}/motor/status`,
+      `${topicPrefix}/device/status`,
+      `${topicPrefix}/motor/ack`,
+    ];
+  }, [topicPrefix]);
+
   const parseMessage = useCallback((topic: string, message: any) => {
     try {
       const raw = typeof message === "string" ? message.trim() : new TextDecoder().decode(message).trim();
       const num = parseFloat(raw);
       console.log(`[MQTT] ${topic}:`, raw);
 
-      // Handle motor acknowledgment
-      if (topic === "water/tank/motor/ack") {
+      if (topic.endsWith("/motor/ack")) {
         clearCommandTimeout();
         if (raw === "ok" || raw === "ack" || raw === "success") {
           setMotorCommandStatus("success");
@@ -84,24 +88,16 @@ export function useMQTT() {
       setSensorData((prev) => {
         const updated = { ...prev, timestamp: new Date() };
 
-        switch (topic) {
-          case "water/tank/level":
-            updated.waterLevel = !isNaN(num) ? Math.min(100, Math.max(0, num)) : prev.waterLevel;
-            break;
-          case "water/tank/temperature":
-            updated.temperature = !isNaN(num) ? num : prev.temperature;
-            break;
-          case "water/tank/tds":
-            updated.salinity = !isNaN(num) ? num : prev.salinity;
-            break;
-          case "water/tank/motor/status":
-            updated.motorRunning = raw === "on" || raw === "1" || raw === "running" || raw === "start";
-            break;
-          case "water/tank/device/status":
-            updated.deviceOnline = raw === "online" || raw === "1" || raw === "alive";
-            break;
-          default:
-            break;
+        if (topic.endsWith("/level")) {
+          updated.waterLevel = !isNaN(num) ? Math.min(100, Math.max(0, num)) : prev.waterLevel;
+        } else if (topic.endsWith("/temperature")) {
+          updated.temperature = !isNaN(num) ? num : prev.temperature;
+        } else if (topic.endsWith("/tds")) {
+          updated.salinity = !isNaN(num) ? num : prev.salinity;
+        } else if (topic.endsWith("/motor/status")) {
+          updated.motorRunning = raw === "on" || raw === "1" || raw === "running" || raw === "start";
+        } else if (topic.endsWith("/device/status")) {
+          updated.deviceOnline = raw === "online" || raw === "1" || raw === "alive";
         }
 
         return updated;
@@ -112,14 +108,30 @@ export function useMQTT() {
   }, [clearCommandTimeout]);
 
   useEffect(() => {
-    const client = mqtt.connect(MQTT_URL, MQTT_OPTIONS);
+    // Reset sensor data when prefix changes
+    setSensorData(defaultData);
+    setMotorCommandStatus("idle");
+
+    const client = mqtt.connect(MQTT_URL, {
+      ...MQTT_OPTIONS,
+      clientId: `cuvoto-web-${Math.random().toString(16).slice(2, 10)}`,
+    });
     clientRef.current = client;
 
+    const currentTopics = [
+      `${topicPrefix}/level`,
+      `${topicPrefix}/temperature`,
+      `${topicPrefix}/tds`,
+      `${topicPrefix}/motor/status`,
+      `${topicPrefix}/device/status`,
+      `${topicPrefix}/motor/ack`,
+    ];
+
     client.on("connect", () => {
-      console.log("[MQTT] Connected to HiveMQ");
+      console.log(`[MQTT] Connected — subscribing to prefix: ${topicPrefix}`);
       setConnected(true);
       setError(null);
-      TOPICS.forEach((t) =>
+      currentTopics.forEach((t) =>
         client.subscribe(t, (err) => {
           if (err) console.error("[MQTT] Subscribe error:", t, err);
           else console.log("[MQTT] Subscribed to", t);
@@ -140,30 +152,29 @@ export function useMQTT() {
       client.end();
       clientRef.current = null;
     };
-  }, [parseMessage, clearCommandTimeout]);
+  }, [topicPrefix, parseMessage, clearCommandTimeout]);
 
   const publishMotorCommand = useCallback((command: "start" | "stop") => {
     if (clientRef.current?.connected) {
       setMotorCommandStatus("pending");
-      clientRef.current.publish("water/tank/motor/command", command);
-      console.log(`[MQTT] Published motor command: ${command}`);
+      clientRef.current.publish(commandTopic, command);
+      console.log(`[MQTT] Published motor command: ${command} to ${commandTopic}`);
 
-      // Timeout if no ack received
       clearCommandTimeout();
       commandTimeoutRef.current = setTimeout(() => {
         setMotorCommandStatus("error");
         setTimeout(() => setMotorCommandStatus("idle"), 3000);
       }, COMMAND_TIMEOUT_MS);
     }
-  }, [clearCommandTimeout]);
+  }, [clearCommandTimeout, commandTopic]);
 
   const publishMotorMode = useCallback((mode: "auto" | "manual") => {
     if (clientRef.current?.connected) {
-      clientRef.current.publish("water/tank/motor/mode", mode);
-      console.log(`[MQTT] Published motor mode: ${mode}`);
+      clientRef.current.publish(modeTopic, mode);
+      console.log(`[MQTT] Published motor mode: ${mode} to ${modeTopic}`);
       setSensorData((prev) => ({ ...prev, motorMode: mode }));
     }
-  }, []);
+  }, [modeTopic]);
 
   return { sensorData, connected, error, motorCommandStatus, publishMotorCommand, publishMotorMode };
 }
