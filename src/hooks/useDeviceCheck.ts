@@ -5,7 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 export function useDeviceCheck() {
   const [hasDevices, setHasDevices] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [trigger, setTrigger] = useState(0);
   const { user } = useAuth();
+
+  const refetch = useCallback(() => setTrigger((t) => t + 1), []);
 
   useEffect(() => {
     if (!user) {
@@ -30,7 +33,7 @@ export function useDeviceCheck() {
     };
 
     check();
-  }, [user]);
+  }, [user, trigger]);
 
-  return { hasDevices, loading };
+  return { hasDevices, loading, refetch };
 }
