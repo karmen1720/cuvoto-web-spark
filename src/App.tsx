@@ -11,6 +11,7 @@ import TanksPage from "./pages/TanksPage";
 import AlertsPage from "./pages/AlertsPage";
 import ProfilePage from "./pages/ProfilePage";
 import RegisterDevicePage from "./pages/RegisterDevicePage";
+import DeviceSetupPage from "./pages/DeviceSetupPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
