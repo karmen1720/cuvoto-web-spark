@@ -32,7 +32,7 @@ const RegisterDevicePage = () => {
 
       setSuccess(true);
       toast.success("Device paired successfully!");
-      setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
+      setTimeout(() => navigate("/dashboard", { replace: true, state: { justPaired: true } }), 1500);
     } catch (err: any) {
       toast.error(err.message || "Failed to pair device");
     } finally {

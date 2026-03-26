@@ -1,7 +1,8 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDeviceCheck } from "@/hooks/useDeviceCheck";
 import { Droplets, Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,7 +11,16 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, requireDevice = false }: ProtectedRouteProps) => {
   const { session, loading: authLoading } = useAuth();
-  const { hasDevices, loading: deviceLoading } = useDeviceCheck();
+  const { hasDevices, loading: deviceLoading, refetch } = useDeviceCheck();
+  const location = useLocation();
+  const justPaired = (location.state as any)?.justPaired === true;
+
+  // Refetch device status when arriving with justPaired flag
+  useEffect(() => {
+    if (justPaired) {
+      refetch();
+    }
+  }, [justPaired, refetch]);
 
   if (authLoading || (session && requireDevice && deviceLoading)) {
     return (
@@ -28,8 +38,8 @@ const ProtectedRoute = ({ children, requireDevice = false }: ProtectedRouteProps
     return <Navigate to="/auth" replace />;
   }
 
-  // If route requires a device and user has none, redirect to register
-  if (requireDevice && !hasDevices) {
+  // If route requires a device and user has none (and not just paired), redirect to register
+  if (requireDevice && !hasDevices && !justPaired) {
     return <Navigate to="/register-device" replace />;
   }
 
