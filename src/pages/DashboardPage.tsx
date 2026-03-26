@@ -3,20 +3,36 @@ import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import MotorControl from "@/components/dashboard/MotorControl";
 import AutoModeSettings from "@/components/dashboard/AutoModeSettings";
+import TankSelector from "@/components/dashboard/TankSelector";
 import { useMQTT } from "@/hooks/useMQTT";
 import { useTanks } from "@/hooks/useTanks";
 import { useTankLogs } from "@/hooks/useTankLogs";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 
 const DashboardPage = () => {
-  const { sensorData, connected, motorCommandStatus, publishMotorCommand, publishMotorMode } = useMQTT();
   const { tanks, loading: tanksLoading, updateTank } = useTanks();
-  const { logs, loading: logsLoading, addLog } = useTankLogs();
   const { user } = useAuth();
+  const [selectedTankId, setSelectedTankId] = useState<string | null>(null);
 
-  const activeTank = tanks[0]; // Primary tank
+  // Auto-select first tank when tanks load
+  useEffect(() => {
+    if (tanks.length > 0 && !selectedTankId) {
+      setSelectedTankId(tanks[0].id);
+    }
+    // If selected tank was deleted, reset
+    if (selectedTankId && !tanks.find(t => t.id === selectedTankId)) {
+      setSelectedTankId(tanks[0]?.id || null);
+    }
+  }, [tanks, selectedTankId]);
+
+  const activeTank = tanks.find(t => t.id === selectedTankId) || tanks[0] || null;
+  const topicPrefix = activeTank?.mqtt_topic_prefix || "water/tank";
+
+  const { sensorData, connected, motorCommandStatus, publishMotorCommand, publishMotorMode } = useMQTT(topicPrefix);
+  const { logs, loading: logsLoading, addLog } = useTankLogs(activeTank?.id);
+
   const waterLevel = sensorData.waterLevel;
   const prevMotorRef = useRef(sensorData.motorRunning);
 
@@ -37,7 +53,6 @@ const DashboardPage = () => {
     }
   }, [sensorData.motorRunning]);
 
-  // Log user-initiated motor commands immediately
   const handleMotorCommand = (cmd: "start" | "stop") => {
     if (!activeTank || !user) return;
     addLog({
@@ -52,7 +67,6 @@ const DashboardPage = () => {
     publishMotorCommand(cmd);
   };
 
-  // Log mode changes
   const handleModeChange = (mode: "auto" | "manual") => {
     if (!activeTank || !user) return;
     addLog({
@@ -125,6 +139,22 @@ const DashboardPage = () => {
           {tanksLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
         </div>
 
+        {/* Tank Selector (shown when multiple devices) */}
+        <TankSelector
+          tanks={tanks}
+          selectedTankId={selectedTankId}
+          onSelect={setSelectedTankId}
+        />
+
+        {/* Device Info Badge */}
+        {activeTank?.device_id && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Device:</span>
+            <span className="text-xs font-mono font-semibold text-primary">{activeTank.device_id}</span>
+            <span className="text-[10px] text-muted-foreground">• Topic: {topicPrefix}</span>
+          </div>
+        )}
+
         {/* Water Level Gauge */}
         <section className="flex flex-col items-center justify-center py-6">
           <motion.div
@@ -136,6 +166,7 @@ const DashboardPage = () => {
             <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
             <div className="relative w-full h-full rounded-full overflow-hidden bg-cuvoto-dark-card flex flex-col justify-end">
               <motion.div
+                key={selectedTankId}
                 initial={{ height: 0 }}
                 animate={{ height: `${waterLevel}%` }}
                 transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
