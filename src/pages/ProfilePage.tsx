@@ -200,7 +200,7 @@ const ProfilePage = () => {
         </button>
 
         <p className="text-center text-[10px] text-muted-foreground mt-4 mb-2">
-          © 2025 CUVOTO Private Limited
+          © 2026 CUVOTO PVT LTD. All rights reserved.
         </p>
       </main>
 
