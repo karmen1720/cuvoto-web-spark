@@ -78,7 +78,7 @@ const ProfilePage = () => {
     <div className="min-h-screen bg-cuvoto-gradient text-foreground dark">
       <header className="sticky top-0 z-50 backdrop-blur-md bg-cuvoto-navy/80 border-b border-cuvoto-border-dark px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Droplets className="w-7 h-7 text-primary" />
+          <img src={cuvotoLogo} alt="CUVOTO" className="w-7 h-7 rounded-lg object-contain" />
           <span className="text-lg font-bold tracking-tight text-primary">CUVOTO</span>
         </div>
         <h2 className="text-base font-semibold">Profile</h2>

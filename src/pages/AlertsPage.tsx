@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { format, isToday, isYesterday } from "date-fns";
 import BottomNav from "@/components/BottomNav";
 import { useTankLogs, type TankLog } from "@/hooks/useTankLogs";
+import cuvotoLogo from "@/assets/cuvoto-logo.jpeg";
 
 type FilterType = "all" | "motor_on" | "motor_off" | "mode_change" | "alert" | "info";
 
@@ -63,7 +64,7 @@ const AlertsPage = () => {
     <div className="min-h-screen bg-cuvoto-gradient text-foreground dark">
       <header className="sticky top-0 z-50 backdrop-blur-md bg-cuvoto-navy/80 border-b border-cuvoto-border-dark px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Droplets className="w-7 h-7 text-primary" />
+          <img src={cuvotoLogo} alt="CUVOTO" className="w-7 h-7 rounded-lg object-contain" />
           <span className="text-lg font-bold tracking-tight text-primary">CUVOTO</span>
         </div>
         <h2 className="text-base font-semibold">Logs & Alerts</h2>
@@ -73,7 +74,6 @@ const AlertsPage = () => {
       </header>
 
       <main className="flex-1 px-4 pb-24 overflow-y-auto">
-        {/* Filter Chips */}
         <div className="flex gap-2 mt-4 mb-4 overflow-x-auto pb-1 scrollbar-none">
           {filterOptions.map((opt) => (
             <button
@@ -90,7 +90,6 @@ const AlertsPage = () => {
           ))}
         </div>
 
-        {/* Counts */}
         <div className="flex gap-3 mb-4">
           <div className="flex-1 bg-cuvoto-dark-card border border-cuvoto-border-dark rounded-xl p-3 text-center">
             <p className="text-xl font-bold text-cuvoto-orange">{counts.motor_on}</p>
@@ -106,7 +105,6 @@ const AlertsPage = () => {
           </div>
         </div>
 
-        {/* Logs */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -151,6 +149,10 @@ const AlertsPage = () => {
             </div>
           ))
         )}
+
+        <p className="text-center text-[10px] text-muted-foreground mt-4">
+          © 2026 CUVOTO PVT LTD. All rights reserved.
+        </p>
       </main>
 
       <BottomNav />
