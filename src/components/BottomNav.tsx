@@ -1,9 +1,9 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Droplets, Bell, User } from "lucide-react";
+import { LayoutDashboard, Cpu, Bell, User } from "lucide-react";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: Droplets, label: "Tanks", path: "/tanks" },
+  { icon: Cpu, label: "Devices", path: "/tanks" },
   { icon: Bell, label: "Alerts", path: "/alerts" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
@@ -22,9 +22,7 @@ const BottomNav = () => {
               key={item.label}
               onClick={() => navigate(item.path)}
               className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg transition-colors ${
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <item.icon className="w-5 h-5" />
