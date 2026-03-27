@@ -1,4 +1,5 @@
-import { Droplets, ChevronRight, Mail, Lock, Bell, HelpCircle, FileText, LogOut, Camera, Loader2, Check, Pencil, X } from "lucide-react";
+import { ChevronRight, Mail, Lock, Bell, HelpCircle, FileText, LogOut, Camera, Loader2, Check, Pencil, X } from "lucide-react";
+import cuvotoLogo from "@/assets/cuvoto-logo.jpeg";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
