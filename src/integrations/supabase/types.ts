@@ -68,6 +68,45 @@ export type Database = {
           },
         ]
       }
+      devices: {
+        Row: {
+          created_at: string
+          device_name: string
+          id: string
+          last_motor_status: string | null
+          last_seen_at: string | null
+          last_tds: number | null
+          last_temperature: number | null
+          last_water_level: number | null
+          mac_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_name?: string
+          id?: string
+          last_motor_status?: string | null
+          last_seen_at?: string | null
+          last_tds?: number | null
+          last_temperature?: number | null
+          last_water_level?: number | null
+          mac_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_name?: string
+          id?: string
+          last_motor_status?: string | null
+          last_seen_at?: string | null
+          last_tds?: number | null
+          last_temperature?: number | null
+          last_water_level?: number | null
+          mac_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invite_codes: {
         Row: {
           code: string

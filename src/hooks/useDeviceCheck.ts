@@ -20,7 +20,7 @@ export function useDeviceCheck() {
     const check = async () => {
       setLoading(true);
       const { count, error } = await supabase
-        .from("tanks")
+        .from("devices")
         .select("*", { count: "exact", head: true });
 
       if (error) {

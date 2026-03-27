@@ -1,42 +1,39 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Droplets, Wifi, Loader2, CheckCircle2, AlertTriangle, Plus, LogOut } from "lucide-react";
+import { Wifi, Loader2, CheckCircle2, Plus, LogOut, Cpu } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { useDevices } from "@/hooks/useDevices";
+import cuvotoLogo from "@/assets/cuvoto-logo.jpeg";
+
+type Step = 1 | 2 | 3;
 
 const RegisterDevicePage = () => {
-  const [code, setCode] = useState("");
-  const [tankName, setTankName] = useState("");
-  const [location, setLocation] = useState("");
+  const [step, setStep] = useState<Step>(1);
+  const [macId, setMacId] = useState("");
+  const [deviceName, setDeviceName] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
+  const { addDevice } = useDevices();
 
-  const handlePair = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!code.trim() || !user) return;
+  const formatMac = (value: string) => {
+    const cleaned = value.replace(/[^a-fA-F0-9]/g, "").toUpperCase();
+    const parts = cleaned.match(/.{1,2}/g) || [];
+    return parts.join(":").slice(0, 17);
+  };
 
+  const isValidMac = macId.replace(/:/g, "").length === 12;
+
+  const handleRegister = async () => {
+    if (!isValidMac || !deviceName.trim()) return;
     setLoading(true);
-    try {
-      const { data, error } = await supabase.rpc("pair_device", {
-        _code: code.trim().toUpperCase(),
-        _user_id: user.id,
-        _tank_name: tankName.trim() || "My Tank",
-        _location: location.trim() || null,
-      });
-
-      if (error) throw error;
-
+    const device = await addDevice(macId, deviceName);
+    setLoading(false);
+    if (device) {
       setSuccess(true);
-      toast.success("Device paired successfully!");
       setTimeout(() => navigate("/dashboard", { replace: true, state: { justPaired: true } }), 1500);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to pair device");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -53,16 +50,13 @@ const RegisterDevicePage = () => {
       {/* Header */}
       <header className="px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Droplets className="w-8 h-8 text-primary" />
+          <img src={cuvotoLogo} alt="CUVOTO" className="w-8 h-8 rounded-lg object-contain" />
           <div>
             <span className="text-lg font-bold tracking-tight text-primary">CUVOTO</span>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground -mt-0.5">Private Limited</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground -mt-0.5">PVT LTD</p>
           </div>
         </div>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-        >
+        <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">
           <LogOut className="w-4 h-4" />
           Logout
         </button>
@@ -70,12 +64,7 @@ const RegisterDevicePage = () => {
 
       {/* Main */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 pb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-sm"
-        >
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
           {/* Icon */}
           <div className="flex flex-col items-center mb-8">
             <motion.div
@@ -84,141 +73,137 @@ const RegisterDevicePage = () => {
               transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
               className="w-20 h-20 bg-primary/10 border-2 border-primary/30 rounded-2xl flex items-center justify-center mb-4"
             >
-              {success ? (
-                <CheckCircle2 className="w-10 h-10 text-cuvoto-green" />
-              ) : (
-                <Wifi className="w-10 h-10 text-primary" />
-              )}
+              {success ? <CheckCircle2 className="w-10 h-10 text-cuvoto-green" /> : <Cpu className="w-10 h-10 text-primary" />}
             </motion.div>
 
             <AnimatePresence mode="wait">
               {success ? (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center"
-                >
-                  <h1 className="text-2xl font-extrabold text-foreground">Device Paired!</h1>
+                <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
+                  <h1 className="text-2xl font-extrabold text-foreground">Device Registered!</h1>
                   <p className="text-sm text-muted-foreground mt-1">Redirecting to dashboard...</p>
                 </motion.div>
               ) : (
-                <motion.div
-                  key="form"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center"
-                >
-                  <h1 className="text-2xl font-extrabold text-foreground">Register Device</h1>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Enter your device's unique pairing code to connect it to your account
-                  </p>
+                <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
+                  <h1 className="text-2xl font-extrabold text-foreground">Set Up Your Device</h1>
+                  <p className="text-sm text-muted-foreground mt-1">Connect your CUVOTO hardware in 3 easy steps</p>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Form */}
+          {/* Step Indicator */}
           {!success && (
-            <motion.form
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              onSubmit={handlePair}
-              className="space-y-4"
-            >
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
-                  Device Code *
-                </label>
-                <input
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. DEV-001-CUVOTO"
-                  className={`${inputClass} font-mono tracking-wider text-center text-base`}
-                  required
-                  maxLength={30}
-                  autoFocus
-                />
-                <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-                  Find this code printed on your CUVOTO device
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
-                  Tank Name
-                </label>
-                <input
-                  value={tankName}
-                  onChange={(e) => setTankName(e.target.value)}
-                  placeholder="e.g. Main Water Tank"
-                  className={inputClass}
-                  maxLength={50}
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
-                  Location
-                </label>
-                <input
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g. Building A - Rooftop"
-                  className={inputClass}
-                  maxLength={100}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || !code.trim()}
-                className="w-full py-3.5 bg-primary text-primary-foreground font-bold text-sm rounded-xl hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2 mt-6"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Pairing Device...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4" />
-                    Pair Device
-                  </>
-                )}
-              </button>
-            </motion.form>
+            <div className="flex items-center justify-center gap-2 mb-6">
+              {[1, 2, 3].map((s) => (
+                <div key={s} className="flex items-center gap-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    step >= s ? "bg-primary text-primary-foreground" : "bg-cuvoto-dark-card border border-cuvoto-border-dark text-muted-foreground"
+                  }`}>
+                    {step > s ? "✓" : s}
+                  </div>
+                  {s < 3 && <div className={`w-8 h-0.5 ${step > s ? "bg-primary" : "bg-cuvoto-border-dark"}`} />}
+                </div>
+              ))}
+            </div>
           )}
 
-          {/* Setup Options */}
+          {/* Steps */}
           {!success && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-6 space-y-3"
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-px flex-1 bg-cuvoto-border-dark" />
-                <span className="text-xs text-muted-foreground font-semibold">OR</span>
-                <div className="h-px flex-1 bg-cuvoto-border-dark" />
-              </div>
+            <AnimatePresence mode="wait">
+              {step === 1 && (
+                <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                  <div className="bg-cuvoto-dark-card border border-cuvoto-border-dark rounded-2xl p-5 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Wifi className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold">Connect to Device Hotspot</h3>
+                        <p className="text-xs text-muted-foreground">Step 1 of 3</p>
+                      </div>
+                    </div>
+                    <ol className="space-y-2 text-xs text-muted-foreground ml-1">
+                      <li>1. Power on your CUVOTO device</li>
+                      <li>2. Go to your phone's WiFi settings</li>
+                      <li>3. Connect to <span className="font-mono font-bold text-primary">"CUVOTO_CONFIG"</span></li>
+                      <li>4. Return here once connected</li>
+                    </ol>
+                  </div>
+                  <button onClick={() => setStep(2)} className="w-full py-3.5 bg-primary text-primary-foreground font-bold text-sm rounded-xl hover:brightness-110 transition-all">
+                    I'm Connected → Next
+                  </button>
+                </motion.div>
+              )}
 
-              <button
-                onClick={() => navigate("/device-setup")}
-                className="w-full py-3.5 bg-cuvoto-dark-card border border-cuvoto-border-dark text-foreground font-bold text-sm rounded-xl hover:border-primary/40 transition-all flex items-center justify-center gap-2"
-              >
-                <Wifi className="w-4 h-4 text-primary" />
-                Setup via Device Hotspot
-              </button>
+              {step === 2 && (
+                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                      Device MAC ID *
+                    </label>
+                    <input
+                      value={macId}
+                      onChange={(e) => setMacId(formatMac(e.target.value))}
+                      placeholder="AA:BB:CC:11:22:33"
+                      className={`${inputClass} font-mono tracking-wider text-center text-base`}
+                      maxLength={17}
+                      autoFocus
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
+                      Find this on your device label or in the hotspot settings page
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => setStep(1)} className="flex-1 py-3 bg-cuvoto-dark-card border border-cuvoto-border-dark text-foreground font-bold text-sm rounded-xl">
+                      Back
+                    </button>
+                    <button onClick={() => isValidMac && setStep(3)} disabled={!isValidMac}
+                      className="flex-1 py-3 bg-primary text-primary-foreground font-bold text-sm rounded-xl hover:brightness-110 disabled:opacity-50 transition-all">
+                      Next →
+                    </button>
+                  </div>
+                </motion.div>
+              )}
 
-              <p className="text-[10px] text-muted-foreground text-center">
-                Connect directly to your device's WiFi hotspot to configure WiFi, MQTT topics, and pair — all automatically.
-              </p>
-            </motion.div>
+              {step === 3 && (
+                <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                      Device Name *
+                    </label>
+                    <input
+                      value={deviceName}
+                      onChange={(e) => setDeviceName(e.target.value)}
+                      placeholder="e.g. Home Water Tank, Cricket Net 1"
+                      className={inputClass}
+                      maxLength={50}
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="bg-cuvoto-dark-card border border-cuvoto-border-dark rounded-xl p-3 space-y-1">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Summary</p>
+                    <p className="text-xs"><span className="text-muted-foreground">MAC: </span><span className="font-mono font-bold text-primary">{macId}</span></p>
+                    <p className="text-xs"><span className="text-muted-foreground">Name: </span><span className="font-bold">{deviceName || "—"}</span></p>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button onClick={() => setStep(2)} className="flex-1 py-3 bg-cuvoto-dark-card border border-cuvoto-border-dark text-foreground font-bold text-sm rounded-xl">
+                      Back
+                    </button>
+                    <button onClick={handleRegister} disabled={loading || !deviceName.trim()}
+                      className="flex-1 py-3.5 bg-primary text-primary-foreground font-bold text-sm rounded-xl hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                      {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Registering...</> : <><Plus className="w-4 h-4" /> Register Device</>}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           )}
         </motion.div>
+
+        {/* Footer */}
+        <p className="text-[10px] text-muted-foreground mt-8">© 2026 CUVOTO PVT LTD. All rights reserved.</p>
       </main>
     </div>
   );

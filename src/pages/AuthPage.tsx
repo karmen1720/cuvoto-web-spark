@@ -340,10 +340,10 @@ const AuthPage = () => {
         {/* Footer */}
         <div className="mt-8 text-center">
           <div className="pt-4 border-t border-border">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Infrastructure Monitoring</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Smart IoT Monitoring</p>
             <p className="text-[10px] text-muted-foreground">Water • Salinity • Temperature</p>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-3">© 2024 CUVOTO Private Limited. All rights reserved.</p>
+          <p className="text-[10px] text-muted-foreground mt-3">© 2026 CUVOTO PVT LTD. All rights reserved.</p>
         </div>
       </motion.div>
     </div>
