@@ -91,7 +91,11 @@ export function useMQTT(registeredMacs: string[]) {
     try {
       const raw = typeof message === "string" ? message : new TextDecoder().decode(message);
       const payload = JSON.parse(raw.trim());
-      const mac = (payload.mac || payload.MAC || "").toUpperCase();
+      let mac = String(payload.mac || payload.MAC || "").toUpperCase();
+      // Single-device setup: if the device omits its MAC, attach data to the only registered device
+      if (!mac && registeredMacsRef.current.size === 1) {
+        mac = [...registeredMacsRef.current][0];
+      }
 
       if (!mac || !registeredMacsRef.current.has(mac)) return;
 
