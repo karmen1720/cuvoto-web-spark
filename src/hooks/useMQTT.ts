@@ -4,11 +4,47 @@ import mqtt, { MqttClient } from "mqtt";
 export interface DeviceTelemetry {
   mac: string;
   waterLevel: number;
+  floats: boolean[]; // index 0 = bottom (20%) ... index 4 = top (100%)
+  floatFault: boolean; // a higher float is wet while a lower one is dry
   salinity: number;
   temperature: number;
   motorRunning: boolean;
   deviceOnline: boolean;
   timestamp: Date;
+}
+
+export const FLOAT_COUNT = 5;
+
+/**
+ * Reads 5 float/conductivity probes from a payload. Accepts:
+ *  - "floats": [1,1,0,0,0]           (bottom → top)
+ *  - "f1".."f5": 1/0
+ *  - "float_mask": 0b00011            (bit0 = bottom)
+ */
+export function parseFloats(payload: any): boolean[] | null {
+  if (Array.isArray(payload.floats)) {
+    return Array.from({ length: FLOAT_COUNT }, (_, i) => Number(payload.floats[i]) === 1 || payload.floats[i] === true);
+  }
+  if (payload.f1 !== undefined) {
+    return Array.from({ length: FLOAT_COUNT }, (_, i) => Number(payload[`f${i + 1}`]) === 1);
+  }
+  if (payload.float_mask !== undefined) {
+    const m = Number(payload.float_mask);
+    return Array.from({ length: FLOAT_COUNT }, (_, i) => ((m >> i) & 1) === 1);
+  }
+  return null;
+}
+
+export function floatsToLevel(floats: boolean[]): { level: number; fault: boolean } {
+  let topWet = -1;
+  floats.forEach((w, i) => { if (w) topWet = i; });
+  const fault = floats.some((w, i) => !w && i < topWet);
+  return { level: ((topWet + 1) / FLOAT_COUNT) * 100, fault };
+}
+
+export function levelToFloats(level: number): boolean[] {
+  const wet = Math.round((level / 100) * FLOAT_COUNT);
+  return Array.from({ length: FLOAT_COUNT }, (_, i) => i < wet);
 }
 
 export type MotorCommandStatus = "idle" | "pending" | "success" | "error";
@@ -69,18 +105,33 @@ export function useMQTT(registeredMacs: string[]) {
         return;
       }
 
-      setTelemetryMap((prev) => ({
-        ...prev,
-        [mac]: {
-          mac,
-          waterLevel: Math.min(100, Math.max(0, Number(payload.water_level ?? payload.level ?? prev[mac]?.waterLevel ?? 0))),
-          salinity: Number(payload.tds ?? payload.salinity ?? prev[mac]?.salinity ?? 0),
-          temperature: Number(payload.temperature ?? payload.temp ?? prev[mac]?.temperature ?? 0),
-          motorRunning: payload.motor === "on" || payload.motor === 1 || payload.motor === true || payload.motor_status === "on",
-          deviceOnline: true,
-          timestamp: new Date(),
-        },
-      }));
+      const floats = parseFloats(payload);
+      setTelemetryMap((prev) => {
+        let level = Number(payload.water_level ?? payload.level ?? prev[mac]?.waterLevel ?? 0);
+        let fault = false;
+        let fl = floats;
+        if (fl) {
+          const r = floatsToLevel(fl);
+          level = r.level;
+          fault = r.fault;
+        } else {
+          fl = prev[mac]?.floats ?? levelToFloats(level);
+        }
+        return {
+          ...prev,
+          [mac]: {
+            mac,
+            waterLevel: Math.min(100, Math.max(0, level)),
+            floats: fl,
+            floatFault: fault,
+            salinity: Number(payload.tds ?? payload.salinity ?? prev[mac]?.salinity ?? 0),
+            temperature: Number(payload.temperature ?? payload.temp ?? prev[mac]?.temperature ?? 0),
+            motorRunning: payload.motor === "on" || payload.motor === 1 || payload.motor === true || payload.motor_status === "on",
+            deviceOnline: true,
+            timestamp: new Date(),
+          },
+        };
+      });
     } catch (e) {
       console.error("[MQTT] Parse error:", e);
     }
