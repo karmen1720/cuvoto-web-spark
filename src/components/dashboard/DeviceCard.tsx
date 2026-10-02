@@ -91,6 +91,13 @@ const DeviceCard = ({ device, liveTelemetry, motorCommandStatus, onMotorCommand,
         </div>
       </div>
 
+      {floatFault && (
+        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-cuvoto-orange/10 border border-cuvoto-orange/30 text-cuvoto-orange text-xs font-semibold">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          Float sensor fault: an upper float is wet while a lower one is dry. Check wiring.
+        </div>
+      )}
+
       {/* Motor Control */}
       <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-xl p-3">
         <div>
