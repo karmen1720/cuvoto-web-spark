@@ -1,6 +1,6 @@
-import { Droplets, Thermometer, Power, Wifi, WifiOff, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Droplets, Thermometer, Power, Wifi, WifiOff, Loader2, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { DeviceTelemetry, MotorCommandStatus } from "@/hooks/useMQTT";
+import { levelToFloats, type DeviceTelemetry, type MotorCommandStatus } from "@/hooks/useMQTT";
 import type { Device } from "@/hooks/useDevices";
 
 interface DeviceCardProps {
@@ -14,6 +14,8 @@ interface DeviceCardProps {
 const DeviceCard = ({ device, liveTelemetry, motorCommandStatus, onMotorCommand, index }: DeviceCardProps) => {
   // Use live data if available, otherwise fall back to last persisted state
   const waterLevel = liveTelemetry?.waterLevel ?? device.last_water_level ?? 0;
+  const floats = liveTelemetry?.floats ?? levelToFloats(Number(waterLevel));
+  const floatFault = liveTelemetry?.floatFault ?? false;
   const temperature = liveTelemetry?.temperature ?? device.last_temperature ?? 0;
   const salinity = liveTelemetry?.salinity ?? device.last_tds ?? 0;
   const motorRunning = liveTelemetry?.motorRunning ?? device.last_motor_status === "on";
@@ -47,20 +49,31 @@ const DeviceCard = ({ device, liveTelemetry, motorCommandStatus, onMotorCommand,
         </div>
       </div>
 
-      {/* Water Level Gauge (compact) */}
+      {/* Tank with 5 float sensors */}
       <div className="flex items-center gap-4">
-        <div className="relative w-20 h-20 rounded-full border-2 border-cuvoto-border-dark flex items-center justify-center overflow-hidden bg-card">
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: `${waterLevel}%` }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-            className="absolute bottom-0 w-full bg-water-gradient"
-          >
-            <div className="liquid-wave" />
-          </motion.div>
-          <span className={`relative z-10 text-lg font-extrabold ${getLevelColor(waterLevel)}`}>
-            {Math.round(waterLevel)}%
-          </span>
+        <div className="flex items-end gap-2">
+          <div className="relative w-16 h-28 rounded-xl border-2 border-cuvoto-border-dark overflow-hidden bg-card">
+            <motion.div
+              initial={{ height: 0 }}
+              animate={{ height: `${waterLevel}%` }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
+              className="absolute bottom-0 w-full bg-water-gradient"
+            >
+              <div className="liquid-wave" />
+            </motion.div>
+            <span className={`absolute inset-0 z-10 flex items-center justify-center text-lg font-extrabold ${getLevelColor(Number(waterLevel))}`}>
+              {Math.round(Number(waterLevel))}%
+            </span>
+          </div>
+          {/* Float indicators, top → bottom */}
+          <div className="h-28 flex flex-col justify-between py-0.5">
+            {[...floats].map((wet, i) => ({ wet, i })).reverse().map(({ wet, i }) => (
+              <div key={i} className="flex items-center gap-1.5">
+                <span className={`w-2.5 h-2.5 rounded-full ${wet ? "bg-primary shadow-[0_0_6px_hsl(var(--primary))]" : "bg-cuvoto-border-dark"}`} />
+                <span className="text-[9px] font-mono text-muted-foreground">F{i + 1} · {(i + 1) * 20}%</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Sensor readings */}
