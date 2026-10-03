@@ -15,16 +15,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 20%;
 
-    --primary: 207 90% 35%;
+    --primary: 207 95% 42%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 207 30% 90%;
-    --secondary-foreground: 207 90% 35%;
+    --secondary: 200 60% 90%;
+    --secondary-foreground: 207 95% 35%;
 
-    --muted: 210 20% 94%;
-    --muted-foreground: 215 15% 50%;
+    --muted: 210 25% 93%;
+    --muted-foreground: 215 20% 42%;
 
-    --accent: 170 80% 40%;
+    --accent: 175 85% 40%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
@@ -37,15 +37,15 @@
     --radius: 0.75rem;
 
     /* CUVOTO custom tokens */
-    --cuvoto-navy: 213 40% 10%;
-    --cuvoto-dark: 213 35% 14%;
-    --cuvoto-dark-card: 213 30% 18%;
-    --cuvoto-blue: 207 90% 35%;
-    --cuvoto-cyan: 185 80% 45%;
-    --cuvoto-teal: 170 60% 40%;
-    --cuvoto-orange: 25 95% 55%;
-    --cuvoto-green: 145 60% 45%;
-    --cuvoto-border-dark: 213 25% 22%;
+    --cuvoto-navy: 218 55% 10%;
+    --cuvoto-dark: 216 48% 15%;
+    --cuvoto-dark-card: 215 40% 20%;
+    --cuvoto-blue: 210 100% 50%;
+    --cuvoto-cyan: 188 95% 48%;
+    --cuvoto-teal: 168 80% 42%;
+    --cuvoto-orange: 28 95% 55%;
+    --cuvoto-green: 150 65% 45%;
+    --cuvoto-border-dark: 215 30% 26%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -67,24 +67,24 @@
     --popover: 213 30% 18%;
     --popover-foreground: 210 20% 92%;
 
-    --primary: 207 90% 45%;
+    --primary: 210 100% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 213 25% 22%;
-    --secondary-foreground: 210 20% 80%;
+    --secondary: 215 35% 24%;
+    --secondary-foreground: 190 60% 75%;
 
-    --muted: 213 25% 22%;
-    --muted-foreground: 215 15% 55%;
+    --muted: 215 35% 24%;
+    --muted-foreground: 212 25% 62%;
 
-    --accent: 185 80% 45%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 188 95% 48%;
+    --accent-foreground: 218 55% 10%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 213 25% 22%;
-    --input: 213 25% 22%;
-    --ring: 207 90% 45%;
+    --border: 215 30% 26%;
+    --input: 215 30% 26%;
+    --ring: 188 95% 48%;
   }
 }
 
@@ -187,13 +187,14 @@
 
 .bg-dashboard-glow {
   background-image:
-    radial-gradient(60rem 30rem at 100% -10%, hsl(var(--cuvoto-cyan) / 0.12), transparent 60%),
-    radial-gradient(40rem 25rem at -10% 20%, hsl(var(--cuvoto-blue) / 0.18), transparent 60%),
+    radial-gradient(60rem 30rem at 100% -10%, hsl(var(--cuvoto-cyan) / 0.22), transparent 60%),
+    radial-gradient(45rem 28rem at -10% 20%, hsl(var(--cuvoto-blue) / 0.28), transparent 60%),
+    radial-gradient(35rem 22rem at 50% 110%, hsl(var(--cuvoto-teal) / 0.16), transparent 60%),
     linear-gradient(180deg, hsl(var(--cuvoto-navy)) 0%, hsl(var(--cuvoto-dark)) 100%);
 }
 
 .text-gradient-cuvoto {
-  background: linear-gradient(90deg, hsl(var(--cuvoto-cyan)), hsl(207 90% 55%));
+  background: linear-gradient(90deg, hsl(var(--cuvoto-cyan)), hsl(210 100% 60%), hsl(var(--cuvoto-teal)));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
