@@ -37,15 +37,15 @@
     --radius: 0.75rem;
 
     /* CUVOTO custom tokens */
-    --cuvoto-navy: 213 40% 10%;
-    --cuvoto-dark: 213 35% 14%;
-    --cuvoto-dark-card: 213 30% 18%;
-    --cuvoto-blue: 207 90% 35%;
-    --cuvoto-cyan: 185 80% 45%;
-    --cuvoto-teal: 170 60% 40%;
-    --cuvoto-orange: 25 95% 55%;
-    --cuvoto-green: 145 60% 45%;
-    --cuvoto-border-dark: 213 25% 22%;
+    --cuvoto-navy: 218 55% 10%;
+    --cuvoto-dark: 216 48% 15%;
+    --cuvoto-dark-card: 215 40% 20%;
+    --cuvoto-blue: 210 100% 50%;
+    --cuvoto-cyan: 188 95% 48%;
+    --cuvoto-teal: 168 80% 42%;
+    --cuvoto-orange: 28 95% 55%;
+    --cuvoto-green: 150 65% 45%;
+    --cuvoto-border-dark: 215 30% 26%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
