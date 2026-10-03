@@ -33,15 +33,16 @@ const DeviceCard = ({ device, liveTelemetry, motorCommandStatus, onMotorCommand,
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="bg-cuvoto-dark-card border border-cuvoto-border-dark rounded-2xl p-4 space-y-4"
+      className="relative overflow-hidden bg-cuvoto-dark-card/80 backdrop-blur border border-cuvoto-border-dark rounded-3xl p-4 sm:p-5 space-y-4 shadow-xl shadow-cuvoto-navy/40"
     >
+      <div className="pointer-events-none absolute -top-16 -right-16 w-40 h-40 rounded-full bg-cuvoto-cyan/10 blur-3xl" />
       {/* Device Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-bold text-foreground">{device.device_name}</h3>
-          <p className="text-[10px] font-mono text-muted-foreground">{device.mac_id}</p>
+      <div className="relative flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="text-base font-bold text-foreground truncate">{device.device_name}</h3>
+          <p className="text-[10px] font-mono text-muted-foreground truncate">{device.mac_id}</p>
         </div>
-        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+        <div className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
           isOnline ? "bg-cuvoto-green/15 text-cuvoto-green" : "bg-destructive/15 text-destructive"
         }`}>
           {isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
@@ -50,9 +51,9 @@ const DeviceCard = ({ device, liveTelemetry, motorCommandStatus, onMotorCommand,
       </div>
 
       {/* Tank with 5 float sensors */}
-      <div className="flex items-center gap-4">
+      <div className="relative flex flex-col xs:flex-row sm:flex-row items-center gap-4">
         <div className="flex items-end gap-2">
-          <div className="relative w-16 h-28 rounded-xl border-2 border-cuvoto-border-dark overflow-hidden bg-card">
+          <div className="relative w-20 h-32 rounded-2xl border-2 border-cuvoto-border-dark overflow-hidden bg-card">
             <motion.div
               initial={{ height: 0 }}
               animate={{ height: `${waterLevel}%` }}
@@ -66,7 +67,7 @@ const DeviceCard = ({ device, liveTelemetry, motorCommandStatus, onMotorCommand,
             </span>
           </div>
           {/* Float indicators, top → bottom */}
-          <div className="h-28 flex flex-col justify-between py-0.5">
+          <div className="h-32 flex flex-col justify-between py-0.5">
             {[...floats].map((wet, i) => ({ wet, i })).reverse().map(({ wet, i }) => (
               <div key={i} className="flex items-center gap-1.5">
                 <span className={`w-2.5 h-2.5 rounded-full ${wet ? "bg-primary shadow-[0_0_6px_hsl(var(--primary))]" : "bg-cuvoto-border-dark"}`} />
@@ -77,7 +78,7 @@ const DeviceCard = ({ device, liveTelemetry, motorCommandStatus, onMotorCommand,
         </div>
 
         {/* Sensor readings */}
-        <div className="flex-1 grid grid-cols-2 gap-2">
+        <div className="w-full sm:flex-1 grid grid-cols-2 gap-2">
           <div className="bg-card border border-border rounded-xl p-2.5 text-center">
             <Droplets className="w-4 h-4 text-primary mx-auto mb-1" />
             <p className="text-[9px] font-bold text-muted-foreground uppercase">TDS</p>
