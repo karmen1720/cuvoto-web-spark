@@ -22,7 +22,9 @@ const ProtectedRoute = ({ children, requireDevice = false }: ProtectedRouteProps
     }
   }, [justPaired, refetch]);
 
-  if (authLoading || (session && requireDevice && deviceLoading)) {
+  // hasDevices === null means the device check hasn't run yet for this session —
+  // treat it as loading so a page reload doesn't briefly redirect to /register-device.
+  if (authLoading || (session && requireDevice && (deviceLoading || hasDevices === null))) {
     return (
       <div className="min-h-screen bg-cuvoto-gradient flex flex-col items-center justify-center gap-4 dark">
         <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30">
@@ -39,7 +41,7 @@ const ProtectedRoute = ({ children, requireDevice = false }: ProtectedRouteProps
   }
 
   // If route requires a device and user has none (and not just paired), redirect to register
-  if (requireDevice && !hasDevices && !justPaired) {
+  if (requireDevice && hasDevices === false && !justPaired) {
     return <Navigate to="/register-device" replace />;
   }
 

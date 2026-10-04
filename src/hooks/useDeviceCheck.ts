@@ -17,15 +17,26 @@ export function useDeviceCheck() {
       return;
     }
 
-    const check = async () => {
+    let cancelled = false;
+
+    const check = async (attempt = 0) => {
       setLoading(true);
       const { count, error } = await supabase
         .from("devices")
         .select("*", { count: "exact", head: true });
 
+      if (cancelled) return;
+
       if (error) {
         console.error("Device check error:", error);
-        setHasDevices(false);
+        // Retry transient errors instead of assuming "no devices" (which would
+        // redirect a device owner to the registration page on a flaky network).
+        if (attempt < 2) {
+          setTimeout(() => !cancelled && check(attempt + 1), 1500);
+          return;
+        }
+        // After retries, keep whatever we last knew rather than forcing a redirect.
+        setHasDevices((prev) => prev ?? false);
       } else {
         setHasDevices((count ?? 0) > 0);
       }
@@ -33,6 +44,7 @@ export function useDeviceCheck() {
     };
 
     check();
+    return () => { cancelled = true; };
   }, [user, trigger]);
 
   return { hasDevices, loading, refetch };
