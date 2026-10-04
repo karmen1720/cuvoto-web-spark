@@ -41,7 +41,7 @@ const ProtectedRoute = ({ children, requireDevice = false }: ProtectedRouteProps
   }
 
   // If route requires a device and user has none (and not just paired), redirect to register
-  if (requireDevice && !hasDevices && !justPaired) {
+  if (requireDevice && hasDevices === false && !justPaired) {
     return <Navigate to="/register-device" replace />;
   }
 
