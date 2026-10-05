@@ -2,6 +2,7 @@ import { Droplets, Settings, WifiOff, Loader2, Power } from "lucide-react";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import { useMQTT } from "@/hooks/useMQTT";
+import { useLevelAlerts } from "@/hooks/useLevelAlerts";
 import { useDevices } from "@/hooks/useDevices";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useRef, useMemo } from "react";
@@ -14,6 +15,11 @@ const DashboardPage = () => {
 
   const registeredMacs = useMemo(() => devices.map((d) => d.mac_id), [devices]);
   const { telemetryMap, connected, motorCommandStatus, publishMotorCommand } = useMQTT(registeredMacs);
+  const deviceNames = useMemo(
+    () => Object.fromEntries(devices.map((d) => [d.mac_id.toUpperCase(), d.device_name])),
+    [devices]
+  );
+  useLevelAlerts(telemetryMap, deviceNames);
 
   // Persist last known state to DB (debounced, only on actual MQTT data)
   const lastPersistedRef = useRef<Record<string, number>>({});
