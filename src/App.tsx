@@ -32,6 +32,9 @@ const App = () => (
             <Route path="/tanks" element={<ProtectedRoute requireDevice><TanksPage /></ProtectedRoute>} />
             <Route path="/alerts" element={<ProtectedRoute requireDevice><AlertsPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/index" element={<Navigate to="/auth" replace />} />
+            <Route path="/index.html" element={<Navigate to="/auth" replace />} />
+            <Route path="/login" element={<Navigate to="/auth" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
