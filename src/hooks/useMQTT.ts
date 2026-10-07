@@ -59,7 +59,10 @@ const MQTT_OPTIONS = {
 
 const GLOBAL_TOPIC = "cuvoto/iot/telemetry";
 const COMMAND_TOPIC = "cuvoto/iot/command";
+const STATUS_TOPIC = "water/tank/device/status";
 const COMMAND_TIMEOUT_MS = 8000;
+/** Device is considered offline if no message arrives for this long. */
+export const OFFLINE_AFTER_MS = 60000;
 
 /**
  * Subscribes to the single global telemetry topic.
@@ -74,6 +77,7 @@ export function useMQTT(registeredMacs: string[]) {
   const clientRef = useRef<MqttClient | null>(null);
   const commandTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const registeredMacsRef = useRef<Set<string>>(new Set());
+  const expectedMotorRef = useRef<boolean | null>(null);
 
   // Keep macs ref in sync
   useEffect(() => {
@@ -87,10 +91,32 @@ export function useMQTT(registeredMacs: string[]) {
     }
   }, []);
 
-  const parseMessage = useCallback((_topic: string, message: any) => {
+  const finishCommand = useCallback((ok: boolean) => {
+    clearCommandTimeout();
+    expectedMotorRef.current = null;
+    setMotorCommandStatus(ok ? "success" : "error");
+    setTimeout(() => setMotorCommandStatus("idle"), 3000);
+  }, [clearCommandTimeout]);
+
+  const setOnline = useCallback((mac: string, online: boolean) => {
+    setTelemetryMap((prev) => prev[mac]
+      ? { ...prev, [mac]: { ...prev[mac], deviceOnline: online, timestamp: online ? new Date() : prev[mac].timestamp } }
+      : prev);
+  }, []);
+
+  const parseMessage = useCallback((topic: string, message: any) => {
     try {
-      const raw = typeof message === "string" ? message : new TextDecoder().decode(message);
-      const payload = JSON.parse(raw.trim());
+      const raw = (typeof message === "string" ? message : new TextDecoder().decode(message)).trim();
+      if (topic === STATUS_TOPIC) {
+        // Accept "online"/"offline", 1/0, or JSON { mac, status }
+        let mac = "", st = raw;
+        try { const j = JSON.parse(raw); if (j && typeof j === "object") { mac = String(j.mac || j.MAC || "").toUpperCase(); st = String(j.status ?? j.state ?? j.online ?? ""); } } catch { /* plain text */ }
+        if (!mac && registeredMacsRef.current.size === 1) mac = [...registeredMacsRef.current][0];
+        if (!mac || !registeredMacsRef.current.has(mac)) return;
+        setOnline(mac, /^(online|1|true|connected)$/i.test(st));
+        return;
+      }
+      const payload = JSON.parse(raw);
       let mac = String(payload.mac || payload.MAC || "").toUpperCase();
       // Single-device setup: if the device omits its MAC, attach data to the only registered device
       if (!mac && registeredMacsRef.current.size === 1) {
@@ -103,11 +129,13 @@ export function useMQTT(registeredMacs: string[]) {
 
       // Handle command ack
       if (payload.type === "ack") {
-        clearCommandTimeout();
-        setMotorCommandStatus(payload.status === "ok" ? "success" : "error");
-        setTimeout(() => setMotorCommandStatus("idle"), 3000);
+        finishCommand(payload.status === "ok");
         return;
       }
+
+      const motorRunning = payload.motor === "on" || payload.motor === 1 || payload.motor === true || payload.motor_status === "on";
+      // Treat telemetry showing the requested motor state as confirmation
+      if (expectedMotorRef.current !== null && motorRunning === expectedMotorRef.current) finishCommand(true);
 
       const floats = parseFloats(payload);
       setTelemetryMap((prev) => {
@@ -130,7 +158,7 @@ export function useMQTT(registeredMacs: string[]) {
             floatFault: fault,
             salinity: Number(payload.tds ?? payload.salinity ?? prev[mac]?.salinity ?? 0),
             temperature: Number(payload.temperature ?? payload.temp ?? prev[mac]?.temperature ?? 0),
-            motorRunning: payload.motor === "on" || payload.motor === 1 || payload.motor === true || payload.motor_status === "on",
+            motorRunning,
             deviceOnline: true,
             timestamp: new Date(),
           },
@@ -139,7 +167,25 @@ export function useMQTT(registeredMacs: string[]) {
     } catch (e) {
       console.error("[MQTT] Parse error:", e);
     }
-  }, [clearCommandTimeout]);
+  }, [finishCommand, setOnline]);
+
+  // Mark devices offline when they stop sending data
+  useEffect(() => {
+    const id = setInterval(() => {
+      setTelemetryMap((prev) => {
+        let changed = false;
+        const next = { ...prev };
+        for (const [mac, t] of Object.entries(prev)) {
+          if (t.deviceOnline && Date.now() - t.timestamp.getTime() > OFFLINE_AFTER_MS) {
+            next[mac] = { ...t, deviceOnline: false };
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    }, 5000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const client = mqtt.connect(MQTT_URL, {
@@ -152,6 +198,7 @@ export function useMQTT(registeredMacs: string[]) {
       console.log("[MQTT] Connected — subscribing to global telemetry topic");
       setConnected(true);
       setError(null);
+      client.subscribe(STATUS_TOPIC);
       client.subscribe(GLOBAL_TOPIC, (err) => {
         if (err) console.error("[MQTT] Subscribe error:", err);
         else console.log("[MQTT] Subscribed to", GLOBAL_TOPIC);
@@ -164,6 +211,7 @@ export function useMQTT(registeredMacs: string[]) {
       setError(err.message);
     });
     client.on("offline", () => setConnected(false));
+    client.on("close", () => setConnected(false));
     client.on("reconnect", () => console.log("[MQTT] Reconnecting..."));
 
     return () => {
@@ -176,17 +224,15 @@ export function useMQTT(registeredMacs: string[]) {
   const publishMotorCommand = useCallback((mac: string, command: "start" | "stop") => {
     if (clientRef.current?.connected) {
       setMotorCommandStatus("pending");
+      expectedMotorRef.current = command === "start";
       const payload = JSON.stringify({ mac: mac.toUpperCase(), command });
       clientRef.current.publish(COMMAND_TOPIC, payload);
       console.log(`[MQTT] Published motor command for ${mac}: ${command}`);
 
       clearCommandTimeout();
-      commandTimeoutRef.current = setTimeout(() => {
-        setMotorCommandStatus("error");
-        setTimeout(() => setMotorCommandStatus("idle"), 3000);
-      }, COMMAND_TIMEOUT_MS);
+      commandTimeoutRef.current = setTimeout(() => finishCommand(false), COMMAND_TIMEOUT_MS);
     }
-  }, [clearCommandTimeout]);
+  }, [clearCommandTimeout, finishCommand]);
 
   return { telemetryMap, connected, error, motorCommandStatus, publishMotorCommand };
 }

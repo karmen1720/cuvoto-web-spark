@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
+import { requestNotifications } from "@/components/NotificationButton";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -62,14 +63,18 @@ const ProfilePage = () => {
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
 
   const settingsItems = [
-    { icon: <Mail className="w-5 h-5" />, label: email, action: undefined },
-    { icon: <Lock className="w-5 h-5" />, label: "Change Password", action: undefined },
-    { icon: <Bell className="w-5 h-5" />, label: "Notification Preferences", action: undefined },
+    { icon: <Mail className="w-5 h-5" />, label: email, action: undefined as undefined | (() => void) },
+    { icon: <Lock className="w-5 h-5" />, label: "Change Password", action: async () => {
+      if (!email) return;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/auth` });
+      error ? toast.error(error.message) : toast.success(`Password reset link sent to ${email}`);
+    } },
+    { icon: <Bell className="w-5 h-5" />, label: "Enable Notifications", action: () => requestNotifications() },
   ];
 
   const supportItems = [
-    { icon: <HelpCircle className="w-5 h-5" />, label: "Help Center" },
-    { icon: <FileText className="w-5 h-5" />, label: "Privacy Policy" },
+    { icon: <HelpCircle className="w-5 h-5" />, label: "Help Center", action: () => window.open("https://cuvoto.com", "_blank", "noopener") },
+    { icon: <FileText className="w-5 h-5" />, label: "Privacy Policy", action: () => window.open("https://cuvoto.com", "_blank", "noopener") },
   ];
 
   const inputClass = "w-full px-3 py-2.5 bg-cuvoto-dark-card border border-cuvoto-border-dark rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30";
@@ -165,7 +170,7 @@ const ProfilePage = () => {
           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 ml-1">Account Settings</h3>
           <div className="bg-cuvoto-dark-card border border-cuvoto-border-dark rounded-2xl overflow-hidden divide-y divide-cuvoto-border-dark">
             {settingsItems.map((item, i) => (
-              <button key={i} className="flex items-center justify-between p-4 w-full hover:bg-cuvoto-navy/50 transition-colors">
+              <button key={i} onClick={item.action} disabled={!item.action} className="flex items-center justify-between p-4 w-full text-left hover:bg-cuvoto-navy/50 transition-colors disabled:hover:bg-transparent disabled:cursor-default">
                 <div className="flex items-center gap-3">
                   <span className="text-muted-foreground">{item.icon}</span>
                   <span className="text-sm font-medium">{item.label}</span>
@@ -180,7 +185,7 @@ const ProfilePage = () => {
           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 ml-1">Support & Legal</h3>
           <div className="bg-cuvoto-dark-card border border-cuvoto-border-dark rounded-2xl overflow-hidden divide-y divide-cuvoto-border-dark">
             {supportItems.map((item, i) => (
-              <button key={i} className="flex items-center justify-between p-4 w-full hover:bg-cuvoto-navy/50 transition-colors">
+              <button key={i} onClick={item.action} disabled={!item.action} className="flex items-center justify-between p-4 w-full text-left hover:bg-cuvoto-navy/50 transition-colors disabled:hover:bg-transparent disabled:cursor-default">
                 <div className="flex items-center gap-3">
                   <span className="text-muted-foreground">{item.icon}</span>
                   <span className="text-sm font-medium">{item.label}</span>

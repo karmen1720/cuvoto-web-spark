@@ -68,9 +68,7 @@ const AlertsPage = () => {
           <span className="text-lg font-bold tracking-tight text-primary">CUVOTO</span>
         </div>
         <h2 className="text-base font-semibold">Logs & Alerts</h2>
-        <button className="w-9 h-9 rounded-full bg-cuvoto-dark-card border border-cuvoto-border-dark flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-          <Filter className="w-5 h-5" />
-        </button>
+        <span className="w-9" />
       </header>
 
       <main className="flex-1 px-4 pb-24 overflow-y-auto">
