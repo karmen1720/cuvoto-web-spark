@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import type { DeviceTelemetry } from "./useMQTT";
+import { showSystemNotification } from "@/lib/notifications";
 
 type Zone = "low" | "normal" | "high" | "full";
 const LOW = 20;
@@ -9,21 +10,26 @@ const zoneOf = (l: number): Zone => (l >= 100 ? "full" : l >= 80 ? "high" : l <=
 
 const notify = (title: string, body: string, kind: "warning" | "success" | "info") => {
   toast[kind](title, { description: body, duration: 8000 });
-  if ("Notification" in window && Notification.permission === "granted") {
-    try { new Notification(title, { body, icon: "/favicon.ico" }); } catch { /* ignore */ }
-  }
+  showSystemNotification(title, body);
   try { navigator.vibrate?.(200); } catch { /* ignore */ }
 };
 
 /** Alerts when a tank crosses into low (≤20%), 80%, or 100% — only on change, never on page load. */
 export function useLevelAlerts(telemetryMap: Record<string, DeviceTelemetry>, names: Record<string, string>) {
   const zones = useRef<Record<string, Zone>>({});
+  const online = useRef<Record<string, boolean>>({});
 
+  // Device online/offline alerts
   useEffect(() => {
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission().catch(() => {});
-    }
-  }, []);
+    Object.values(telemetryMap).forEach((t) => {
+      const prev = online.current[t.mac];
+      online.current[t.mac] = t.deviceOnline;
+      if (prev === undefined || prev === t.deviceOnline) return;
+      const name = names[t.mac] || "Device";
+      if (t.deviceOnline) notify(`${name} is back online`, "Live data is flowing again", "success");
+      else notify(`${name} went offline`, "No data received for over a minute", "warning");
+    });
+  }, [telemetryMap, names]);
 
   useEffect(() => {
     Object.values(telemetryMap).forEach((t) => {
