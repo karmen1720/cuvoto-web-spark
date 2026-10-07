@@ -18,7 +18,7 @@ const TanksPage = () => {
           <span className="text-lg font-bold tracking-tight text-primary">CUVOTO</span>
         </div>
         <h2 className="text-base font-semibold">Devices</h2>
-        <button className="w-9 h-9 rounded-full bg-cuvoto-dark-card border border-cuvoto-border-dark flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+        <button aria-label="Settings" onClick={() => navigate("/profile")} className="w-9 h-9 rounded-full bg-cuvoto-dark-card border border-cuvoto-border-dark flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
           <Settings className="w-5 h-5" />
         </button>
       </header>
@@ -69,13 +69,18 @@ const TanksPage = () => {
                       <p className="text-[10px] font-mono text-muted-foreground">{device.mac_id}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                        device.last_seen_at ? "bg-cuvoto-green/15 text-cuvoto-green" : "bg-destructive/15 text-destructive"
-                      }`}>
-                        {device.last_seen_at ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-                        {device.last_seen_at ? "seen" : "new"}
-                      </div>
-                      <button onClick={() => deleteDevice(device.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                      {(() => {
+                        const on = !!device.last_seen_at && Date.now() - new Date(device.last_seen_at).getTime() < 2 * 60 * 1000;
+                        return (
+                          <div title={device.last_seen_at ? `Last seen ${new Date(device.last_seen_at).toLocaleString()}` : "Never seen"} className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                            on ? "bg-cuvoto-green/15 text-cuvoto-green" : "bg-destructive/15 text-destructive"
+                          }`}>
+                            {on ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                            {on ? "Online" : device.last_seen_at ? "Offline" : "Never seen"}
+                          </div>
+                        );
+                      })()}
+                      <button aria-label="Remove device" onClick={() => { if (window.confirm(`Remove ${device.device_name}? You will need to pair it again.`)) deleteDevice(device.id); }} className="text-muted-foreground hover:text-destructive transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>

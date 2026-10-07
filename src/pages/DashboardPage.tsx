@@ -7,6 +7,7 @@ import { useDevices } from "@/hooks/useDevices";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useRef, useMemo } from "react";
 import cuvotoLogo from "@/assets/cuvoto-logo.jpeg";
+import NotificationButton from "@/components/NotificationButton";
 import DeviceCard from "@/components/dashboard/DeviceCard";
 
 const DashboardPage = () => {
@@ -67,9 +68,7 @@ const DashboardPage = () => {
                 </>
               )}
             </div>
-            <button aria-label="Settings" className="w-9 h-9 rounded-full bg-cuvoto-dark-card border border-cuvoto-border-dark flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-              <Settings className="w-5 h-5" />
-            </button>
+            <NotificationButton />
           </div>
         </div>
       </header>
