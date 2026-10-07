@@ -76,7 +76,7 @@ const TanksPage = () => {
                             on ? "bg-cuvoto-green/15 text-cuvoto-green" : "bg-destructive/15 text-destructive"
                           }`}>
                             {on ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-                            {on ? "Online" : device.last_seen_at ? "Offline" : "Never seen"}
+                            {!device.last_seen_at ? "Never seen" : on ? "Online" : `Seen ${(() => { const m = Math.round((Date.now() - new Date(device.last_seen_at).getTime()) / 60000); return m < 60 ? `${m}m` : m < 1440 ? `${Math.round(m / 60)}h` : `${Math.round(m / 1440)}d`; })()} ago`}
                           </div>
                         );
                       })()}
