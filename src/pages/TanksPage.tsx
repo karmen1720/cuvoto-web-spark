@@ -1,4 +1,5 @@
-import { Droplets, Settings, Wifi, WifiOff, Plus, Loader2, Trash2, X } from "lucide-react";
+import { Droplets, Settings, Wifi, WifiOff, Plus, Loader2, Trash2, X, Copy } from "lucide-react";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -96,6 +97,18 @@ const TanksPage = () => {
                       <span className="font-semibold">{device.last_motor_status}</span>
                     </div>
                   </div>
+                  {(device as any).ingest_token && (
+                    <button
+                      onClick={() => { navigator.clipboard?.writeText((device as any).ingest_token); toast.success("Device token copied — paste it into the firmware"); }}
+                      className="mt-3 w-full flex items-center justify-between gap-2 p-2.5 rounded-xl bg-card border border-border text-left"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Device token (for alerts)</span>
+                        <span className="block text-[11px] font-mono truncate">{(device as any).ingest_token}</span>
+                      </span>
+                      <Copy className="w-4 h-4 shrink-0 text-muted-foreground" />
+                    </button>
+                  )}
                 </motion.div>
               ))}
             </div>
