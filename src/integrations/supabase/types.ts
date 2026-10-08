@@ -70,9 +70,12 @@ export type Database = {
       }
       devices: {
         Row: {
+          alert_zone: string | null
           created_at: string
           device_name: string
           id: string
+          ingest_token: string
+          is_online: boolean
           last_motor_status: string | null
           last_seen_at: string | null
           last_tds: number | null
@@ -82,9 +85,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          alert_zone?: string | null
           created_at?: string
           device_name?: string
           id?: string
+          ingest_token?: string
+          is_online?: boolean
           last_motor_status?: string | null
           last_seen_at?: string | null
           last_tds?: number | null
@@ -94,9 +100,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          alert_zone?: string | null
           created_at?: string
           device_name?: string
           id?: string
+          ingest_token?: string
+          is_online?: boolean
           last_motor_status?: string | null
           last_seen_at?: string | null
           last_tds?: number | null
@@ -197,6 +206,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       tank_logs: {
         Row: {

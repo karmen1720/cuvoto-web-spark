@@ -1,0 +1,3 @@
+- Background push: devices POST telemetry to the `device-telemetry` function (auth = MAC + per-device `ingest_token`); alerts are sent with Web Push (VAPID) from `_shared/push.ts`. Why: the server can't hold an MQTT connection.
+- Offline detection runs on a 5-minute cron calling `device-offline-check`. Why: silence produces no event to react to.
+- `public/notify-sw.js` is notification-only (push + click, no caching). Why: avoids stale-cache issues in preview.
