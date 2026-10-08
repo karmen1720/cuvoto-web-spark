@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 export type NotifyStatus = "granted" | "denied" | "default" | "unsupported" | "open-in-new-tab";
 
 const supported = () => typeof window !== "undefined" && "Notification" in window;
