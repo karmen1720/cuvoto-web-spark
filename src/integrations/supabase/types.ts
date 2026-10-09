@@ -71,6 +71,7 @@ export type Database = {
       devices: {
         Row: {
           alert_zone: string | null
+          connection_mode: string
           created_at: string
           device_name: string
           id: string
@@ -81,11 +82,13 @@ export type Database = {
           last_tds: number | null
           last_temperature: number | null
           last_water_level: number | null
+          local_ip: string | null
           mac_id: string
           user_id: string
         }
         Insert: {
           alert_zone?: string | null
+          connection_mode?: string
           created_at?: string
           device_name?: string
           id?: string
@@ -96,11 +99,13 @@ export type Database = {
           last_tds?: number | null
           last_temperature?: number | null
           last_water_level?: number | null
+          local_ip?: string | null
           mac_id: string
           user_id: string
         }
         Update: {
           alert_zone?: string | null
+          connection_mode?: string
           created_at?: string
           device_name?: string
           id?: string
@@ -111,6 +116,7 @@ export type Database = {
           last_tds?: number | null
           last_temperature?: number | null
           last_water_level?: number | null
+          local_ip?: string | null
           mac_id?: string
           user_id?: string
         }
