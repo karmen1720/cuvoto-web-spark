@@ -1,0 +1,1 @@
+ALTER TABLE public.devices ADD COLUMN IF NOT EXISTS local_ip text; ALTER TABLE public.devices ADD COLUMN IF NOT EXISTS connection_mode text NOT NULL DEFAULT 'cloud';
