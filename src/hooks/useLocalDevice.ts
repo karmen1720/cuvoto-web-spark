@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { levelToFloats, type DeviceTelemetry, type MotorCommandStatus } from "@/hooks/useMQTT";
+import { levelToFloats, parseFloats, floatsToLevel, type DeviceTelemetry, type MotorCommandStatus } from "@/hooks/useMQTT";
 
 /** Polls the device directly on the LAN (GET http://<ip>/status) and sends motor commands (GET /motor?cmd=). */
 export function useLocalDevice(ip: string | null, enabled: boolean) {
@@ -18,17 +18,20 @@ export function useLocalDevice(ip: string | null, enabled: boolean) {
         clearTimeout(t);
         const j = await res.json();
         if (!alive) return;
-        const level = Number(j.level ?? j.water_level ?? 0);
-        const floats: boolean[] = Array.isArray(j.floats) ? j.floats.map(Boolean) : levelToFloats(level);
+        const parsed = parseFloats(j);
+        const fromFloats = parsed ? floatsToLevel(parsed) : null;
+        const level = fromFloats?.level ?? Number(j.level ?? j.water_level ?? 0);
         setTelemetry({
+          mac: String(j.mac ?? ""),
           waterLevel: level,
-          floats,
-          floatFault: false,
+          floats: parsed ?? levelToFloats(level),
+          floatFault: fromFloats?.fault ?? false,
           temperature: Number(j.temperature ?? j.temp ?? 0),
           salinity: Number(j.tds ?? 0),
           motorRunning: j.motor === "on" || j.motor === true || j.motor_status === "on",
           deviceOnline: true,
-        } as DeviceTelemetry);
+          timestamp: new Date(),
+        });
         setError(null);
       } catch {
         if (!alive) return;

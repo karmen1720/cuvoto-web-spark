@@ -14,6 +14,8 @@ export interface Device {
   last_motor_status: string;
   last_seen_at: string | null;
   created_at: string;
+  local_ip?: string | null;
+  connection_mode?: string;
 }
 
 export function useDevices() {
@@ -93,5 +95,11 @@ export function useDevices() {
     return true;
   };
 
-  return { devices, loading, fetchDevices, addDevice, updateDeviceState, deleteDevice };
+  const updateLocalSettings = async (id: string, updates: { local_ip?: string | null; connection_mode?: string }) => {
+    setDevices((prev) => prev.map((d) => (d.id === id ? { ...d, ...updates } : d)));
+    const { error } = await supabase.from("devices").update(updates as any).eq("id", id);
+    if (error) toast.error("Failed to save local settings");
+  };
+
+  return { devices, loading, fetchDevices, addDevice, updateDeviceState, deleteDevice, updateLocalSettings };
 }
