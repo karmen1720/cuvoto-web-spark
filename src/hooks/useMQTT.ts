@@ -9,6 +9,7 @@ export interface DeviceTelemetry {
   salinity: number;
   temperature: number;
   motorRunning: boolean;
+  continueRun: boolean;
   deviceOnline: boolean;
   timestamp: Date;
 }
@@ -159,6 +160,7 @@ export function useMQTT(registeredMacs: string[]) {
             salinity: Number(payload.tds ?? payload.salinity ?? prev[mac]?.salinity ?? 0),
             temperature: Number(payload.temperature ?? payload.temp ?? prev[mac]?.temperature ?? 0),
             motorRunning,
+            continueRun: payload.continue_run === true || payload.continue_run === 1 || payload.continue_run === "true",
             deviceOnline: true,
             timestamp: new Date(),
           },
@@ -221,7 +223,7 @@ export function useMQTT(registeredMacs: string[]) {
     };
   }, [parseMessage, clearCommandTimeout]);
 
-  const publishMotorCommand = useCallback((mac: string, command: "start" | "stop") => {
+  const publishMotorCommand = useCallback((mac: string, command: "start" | "stop" | "continue") => {
     if (clientRef.current?.connected) {
       setMotorCommandStatus("pending");
       expectedMotorRef.current = command === "start";

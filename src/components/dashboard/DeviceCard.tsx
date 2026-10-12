@@ -7,7 +7,7 @@ interface DeviceCardProps {
   device: Device;
   liveTelemetry?: DeviceTelemetry;
   motorCommandStatus: MotorCommandStatus;
-  onMotorCommand: (cmd: "start" | "stop") => void;
+  onMotorCommand: (cmd: "start" | "stop" | "continue") => void;
   index: number;
 }
 
@@ -19,6 +19,7 @@ const DeviceCard = ({ device, liveTelemetry, motorCommandStatus, onMotorCommand,
   const temperature = liveTelemetry?.temperature ?? device.last_temperature ?? 0;
   const salinity = liveTelemetry?.salinity ?? device.last_tds ?? 0;
   const motorRunning = liveTelemetry?.motorRunning ?? device.last_motor_status === "on";
+  const continueRun = liveTelemetry?.continueRun ?? false;
   const isOnline = liveTelemetry?.deviceOnline ?? false;
   const isPending = motorCommandStatus === "pending";
 
@@ -116,6 +117,21 @@ const DeviceCard = ({ device, liveTelemetry, motorCommandStatus, onMotorCommand,
           </AnimatePresence>
         </div>
 
+        <div className="flex items-center gap-2">
+        {(
+          <button
+            onClick={() => onMotorCommand("continue")}
+            disabled={isPending || !isOnline || continueRun}
+            title="Allow the motor to keep running above 100%"
+            className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-xs transition-all ${
+              continueRun
+                ? "bg-cuvoto-orange/20 text-cuvoto-orange border border-cuvoto-orange/30"
+                : "bg-cuvoto-orange text-cuvoto-navy shadow-lg"
+            }`}
+          >
+            {continueRun ? "Override On" : "Continue"}
+          </button>
+        )}
         <button
           onClick={() => onMotorCommand(motorRunning ? "stop" : "start")}
           disabled={isPending || !isOnline}
@@ -132,6 +148,7 @@ const DeviceCard = ({ device, liveTelemetry, motorCommandStatus, onMotorCommand,
           {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Power className="w-4 h-4" />}
           {isPending ? "…" : motorRunning ? "Stop" : "Start"}
         </button>
+        </div>
       </div>
     </motion.div>
   );

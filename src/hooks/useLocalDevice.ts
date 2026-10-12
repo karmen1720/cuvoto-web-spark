@@ -29,6 +29,7 @@ export function useLocalDevice(ip: string | null, enabled: boolean) {
           temperature: Number(j.temperature ?? j.temp ?? 0),
           salinity: Number(j.tds ?? 0),
           motorRunning: j.motor === "on" || j.motor === true || j.motor_status === "on",
+          continueRun: j.continueRun === true || j.continueRun === "true",
           deviceOnline: true,
           timestamp: new Date(),
         });
@@ -44,14 +45,14 @@ export function useLocalDevice(ip: string | null, enabled: boolean) {
     return () => { alive = false; clearInterval(id); };
   }, [ip, enabled]);
 
-  const sendCommand = useCallback(async (cmd: "start" | "stop") => {
+  const sendCommand = useCallback(async (cmd: "start" | "stop" | "continue") => {
     if (!ip) return;
     setCmdStatus("pending");
     try {
       const res = await fetch(`http://${ip}/motor?cmd=${cmd}`);
       if (!res.ok) throw new Error();
       setCmdStatus("success");
-      setTelemetry((p) => (p ? { ...p, motorRunning: cmd === "start" } : p));
+      setTelemetry((p) => (p ? { ...p, motorRunning: cmd !== "stop", continueRun: cmd === "continue" } : p));
     } catch {
       setCmdStatus("error");
     }
