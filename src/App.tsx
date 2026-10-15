@@ -13,6 +13,7 @@ import ProfilePage from "./pages/ProfilePage";
 import RegisterDevicePage from "./pages/RegisterDevicePage";
 import DeviceSetupPage from "./pages/DeviceSetupPage";
 import NotFound from "./pages/NotFound";
+import LocalPage from "./pages/LocalPage";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/local" element={<LocalPage />} />
             <Route path="/register-device" element={<ProtectedRoute><RegisterDevicePage /></ProtectedRoute>} />
             <Route path="/device-setup" element={<ProtectedRoute><DeviceSetupPage /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute requireDevice><DashboardPage /></ProtectedRoute>} />

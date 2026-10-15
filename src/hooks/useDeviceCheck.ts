@@ -17,6 +17,12 @@ export function useDeviceCheck() {
       return;
     }
 
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setHasDevices(true);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
 
     const check = async (attempt = 0) => {

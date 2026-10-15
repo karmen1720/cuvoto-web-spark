@@ -14,6 +14,7 @@ const ProtectedRoute = ({ children, requireDevice = false }: ProtectedRouteProps
   const { hasDevices, loading: deviceLoading, refetch } = useDeviceCheck();
   const location = useLocation();
   const justPaired = (location.state as any)?.justPaired === true;
+  const offline = typeof navigator !== "undefined" && !navigator.onLine;
 
   // Refetch device status when arriving with justPaired flag
   useEffect(() => {
@@ -34,6 +35,10 @@ const ProtectedRoute = ({ children, requireDevice = false }: ProtectedRouteProps
         <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     );
+  }
+
+  if (offline && requireDevice) {
+    return <Navigate to="/local" replace />;
   }
 
   if (!session) {
