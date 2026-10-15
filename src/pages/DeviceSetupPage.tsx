@@ -20,6 +20,7 @@ const stepLabels: Record<ProvisioningStep, string> = {
   connect_hotspot: "Connect to Device",
   detect_device: "Detecting...",
   configure_device: "Configure Device",
+  connection_choice: "Connection Mode",
   scan_wifi: "WiFi Setup",
   send_wifi: "Sending...",
   finalizing: "Finishing Up",
@@ -32,7 +33,7 @@ const DeviceSetupPage = () => {
   const { user } = useAuth();
   const {
     step, deviceInfo, networks, loading, error,
-    resetError, goToStep, detectDevice, configureDevice, scanWifi, sendWifiCredentials,
+    resetError, goToStep, detectDevice, configureDevice, scanWifi, sendWifiCredentials, selectHotspotOnly,
   } = useDeviceProvisioning();
 
   // Config form
@@ -45,6 +46,7 @@ const DeviceSetupPage = () => {
   const [selectedSsid, setSelectedSsid] = useState("");
   const [wifiPassword, setWifiPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [connectionMode, setConnectionMode] = useState<"wifi" | "hotspot" | null>(null);
 
   // Pairing
   const [pairing, setPairing] = useState(false);
@@ -90,6 +92,17 @@ const DeviceSetupPage = () => {
     if (success) {
       await handlePairInDb();
     }
+  };
+
+  const handleConnectionChoice = async (mode: "wifi" | "hotspot") => {
+    setConnectionMode(mode);
+    if (mode === "wifi") {
+      goToStep("scan_wifi");
+      await scanWifi();
+      return;
+    }
+    const success = await selectHotspotOnly();
+    if (success) await handlePairInDb();
   };
 
   const handleRescan = async () => {
@@ -182,7 +195,7 @@ const DeviceSetupPage = () => {
   };
 
   // Step progress
-  const stepOrder: ProvisioningStep[] = ["connect_hotspot", "configure_device", "scan_wifi", "finalizing", "complete"];
+  const stepOrder: ProvisioningStep[] = ["connect_hotspot", "configure_device", "connection_choice", "scan_wifi", "finalizing", "complete"];
   const currentIdx = stepOrder.indexOf(step);
 
   return (
@@ -401,6 +414,31 @@ const DeviceSetupPage = () => {
             </motion.div>
           )}
 
+          {/* STEP 3: Choose connection mode */}
+          {step === "connection_choice" && (
+            <motion.div key="connection-choice" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="mt-8">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
+                  <Wifi className="w-8 h-8 text-primary" />
+                </div>
+                <h2 className="text-xl font-extrabold">Choose Connection</h2>
+                <p className="text-sm text-muted-foreground mt-2">Use your home WiFi for cloud monitoring, or continue locally through the device hotspot.</p>
+              </div>
+              <div className="space-y-3">
+                <button onClick={() => handleConnectionChoice("wifi")} disabled={loading} className="w-full p-4 rounded-xl border border-primary/30 bg-primary/10 text-left hover:bg-primary/15 transition-all disabled:opacity-50">
+                  <span className="block text-sm font-bold">Connect to WiFi</span>
+                  <span className="block text-xs text-muted-foreground mt-1">Scan nearby networks and enter the password.</span>
+                </button>
+                <button onClick={() => handleConnectionChoice("hotspot")} disabled={loading} className="w-full p-4 rounded-xl border border-cuvoto-border-dark bg-cuvoto-dark-card text-left hover:border-primary/30 transition-all disabled:opacity-50">
+                  <span className="block text-sm font-bold">Stay in Hotspot Mode</span>
+                  <span className="block text-xs text-muted-foreground mt-1">Keep using the shared local device UI without joining home WiFi.</span>
+                </button>
+              </div>
+              {loading && <div className="flex items-center justify-center gap-2 mt-6 text-sm text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" />Saving connection mode...</div>}
+              {error && <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-xl mt-4"><AlertTriangle className="w-4 h-4 text-destructive mt-0.5 shrink-0" /><p className="text-xs text-destructive">{error}</p></div>}
+            </motion.div>
+          )}
+
           {/* STEP 3: WiFi Setup */}
           {step === "scan_wifi" && (
             <motion.div
@@ -581,7 +619,9 @@ const DeviceSetupPage = () => {
               </motion.div>
               <h2 className="text-2xl font-extrabold">Device Ready!</h2>
               <p className="text-sm text-muted-foreground mt-2 max-w-xs">
-                Your device has been configured and paired. Switch back to your home WiFi to start monitoring.
+                {connectionMode === "hotspot"
+                  ? "Your device is ready in hotspot mode. Stay connected to its hotspot to view and control it locally."
+                  : "Your device has been configured and paired. Switch back to your home WiFi to start monitoring."}
               </p>
 
               {deviceInfo && (
@@ -595,8 +635,8 @@ const DeviceSetupPage = () => {
                     <span className="font-mono font-semibold">{deviceInfo.device_id}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">WiFi</span>
-                    <span className="font-semibold">{selectedSsid}</span>
+                    <span className="text-muted-foreground">Connection</span>
+                    <span className="font-semibold">{connectionMode === "hotspot" ? "Hotspot only" : selectedSsid}</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">Topic</span>

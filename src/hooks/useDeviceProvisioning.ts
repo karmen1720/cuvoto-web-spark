@@ -20,6 +20,7 @@ export type ProvisioningStep =
   | "connect_hotspot"
   | "detect_device"
   | "configure_device"
+  | "connection_choice"
   | "scan_wifi"
   | "send_wifi"
   | "finalizing"
@@ -85,7 +86,7 @@ export function useDeviceProvisioning() {
 
         if (!res.ok) throw new Error("Failed to configure device");
 
-        setStep("scan_wifi");
+        setStep("connection_choice");
         return true;
       } catch (e: any) {
         setError("Failed to send configuration to device. Please try again.");
@@ -144,6 +145,22 @@ export function useDeviceProvisioning() {
     []
   );
 
+  const selectHotspotOnly = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${DEVICE_BASE_URL}/hotspot-only`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to keep hotspot mode");
+      setStep("complete");
+      return true;
+    } catch {
+      setError("Could not keep the device in hotspot mode.");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const goToStep = (s: ProvisioningStep) => {
     setError(null);
     setStep(s);
@@ -161,5 +178,6 @@ export function useDeviceProvisioning() {
     configureDevice,
     scanWifi,
     sendWifiCredentials,
+    selectHotspotOnly,
   };
 }
