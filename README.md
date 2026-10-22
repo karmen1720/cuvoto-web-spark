@@ -1,8 +1,8 @@
-# Welcome to your Lovable project
+# CUVOTO Web
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Vite/React frontend for the CUVOTO water-monitoring system.
 
 ## How can I edit this code?
 
@@ -62,12 +62,10 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Deploy the Vite frontend to Vercel with:
 
-## Can I connect a custom domain to my Lovable project?
+- Build command: `npm run build`
+- Output directory: `dist`
+- Environment variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, and `VITE_SUPABASE_PROJECT_ID`
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Deploy Supabase migrations and Edge Functions from the `supabase/` directory with the Supabase CLI. Add the Vercel URL to Supabase Authentication redirect URLs.
